@@ -13,8 +13,10 @@ import type {
   PredictiveSearchQuery,
 } from 'storefrontapi.generated';
 
-export const meta: Route.MetaFunction = () => {
-  return [{title: `Hydrogen | Search`}];
+export const meta: Route.MetaFunction = ({data}) => {
+  const term =
+    data && 'term' in data && typeof data.term === 'string' ? data.term : '';
+  return [{title: term ? `Taylan Wear | Ara: ${term}` : 'Taylan Wear | Ara'}];
 };
 
 export async function loader({request, context}: Route.LoaderArgs) {
@@ -33,38 +35,50 @@ export async function loader({request, context}: Route.LoaderArgs) {
   return await searchPromise;
 }
 
-/**
- * Renders the /search route
- */
 export default function SearchPage() {
   const {type, term, result, error} = useLoaderData<typeof loader>();
   if (type === 'predictive') return null;
 
   return (
-    <div className="search">
-      <h1>Search</h1>
-      <SearchForm>
-        {({inputRef}) => (
-          <>
-            <input
-              defaultValue={term}
-              name="q"
-              placeholder="Search…"
-              ref={inputRef}
-              type="search"
-            />
-            &nbsp;
-            <button type="submit">Search</button>
-          </>
-        )}
-      </SearchForm>
-      {error && <p style={{color: 'red'}}>{error}</p>}
-      {!term || !result?.total ? (
+    <div className="search-page">
+      <header className="search-page__header">
+        <h1 className="search-page__title">Ara</h1>
+        <SearchForm>
+          {({inputRef}) => (
+            <div className="search-page__form">
+              <input
+                className="search-page__input"
+                defaultValue={term}
+                name="q"
+                placeholder="Ürün ara…"
+                ref={inputRef}
+                type="search"
+              />
+              <button className="search-page__submit" type="submit">
+                Ara
+              </button>
+            </div>
+          )}
+        </SearchForm>
+        {term ? (
+          <p className="search-page__meta">
+            {result?.total
+              ? `“${term}” için ${result.total} sonuç`
+              : `“${term}” için sonuç yok`}
+          </p>
+        ) : null}
+      </header>
+
+      {error ? <p className="search-page__error">{error}</p> : null}
+
+      {!term ? (
+        <p className="search-page__empty">Aramak istediğin ürünü yaz.</p>
+      ) : !result?.total ? (
         <SearchResults.Empty />
       ) : (
         <SearchResults result={result} term={term}>
           {({articles, pages, products, term}) => (
-            <div>
+            <div className="search-page__results">
               <SearchResults.Products products={products} term={term} />
               <SearchResults.Pages pages={pages} term={term} />
               <SearchResults.Articles articles={articles} term={term} />
@@ -77,10 +91,6 @@ export default function SearchPage() {
   );
 }
 
-/**
- * Regular search query and fragments
- * (adjust as needed)
- */
 const SEARCH_PRODUCT_FRAGMENT = `#graphql
   fragment SearchProduct on Product {
     __typename
@@ -90,6 +100,31 @@ const SEARCH_PRODUCT_FRAGMENT = `#graphql
     title
     trackingParameters
     vendor
+    tags
+    priceRange {
+      minVariantPrice {
+        amount
+        currencyCode
+      }
+    }
+    images(first: 2) {
+      nodes {
+        id
+        url
+        altText
+        width
+        height
+      }
+    }
+    options {
+      name
+      optionValues {
+        name
+        swatch {
+          color
+        }
+      }
+    }
     selectedOrFirstAvailableVariant(
       selectedOptions: []
       ignoreUnknownOptions: true
@@ -151,7 +186,6 @@ const PAGE_INFO_FRAGMENT = `#graphql
   }
 ` as const;
 
-// NOTE: https://shopify.dev/docs/api/storefront/latest/queries/search
 export const SEARCH_QUERY = `#graphql
   query RegularSearch(
     $country: CountryCode
@@ -210,9 +244,6 @@ export const SEARCH_QUERY = `#graphql
   ${PAGE_INFO_FRAGMENT}
 ` as const;
 
-/**
- * Regular search fetcher
- */
 async function regularSearch({
   request,
   context,
@@ -225,7 +256,6 @@ async function regularSearch({
   const variables = getPaginationVariables(request, {pageBy: 8});
   const term = String(url.searchParams.get('q') || '');
 
-  // Search articles, pages, and products for the `q` term
   const {
     errors,
     ...items
@@ -250,10 +280,6 @@ async function regularSearch({
   return {type: 'regular', term, error, result: {total, items}};
 }
 
-/**
- * Predictive search query and fragments
- * (adjust as needed)
- */
 const PREDICTIVE_SEARCH_ARTICLE_FRAGMENT = `#graphql
   fragment PredictiveArticle on Article {
     __typename
@@ -335,7 +361,6 @@ const PREDICTIVE_SEARCH_QUERY_FRAGMENT = `#graphql
   }
 ` as const;
 
-// NOTE: https://shopify.dev/docs/api/storefront/latest/queries/predictiveSearch
 const PREDICTIVE_SEARCH_QUERY = `#graphql
   query PredictiveSearch(
     $country: CountryCode
@@ -375,9 +400,6 @@ const PREDICTIVE_SEARCH_QUERY = `#graphql
   ${PREDICTIVE_SEARCH_QUERY_FRAGMENT}
 ` as const;
 
-/**
- * Predictive search fetcher
- */
 async function predictiveSearch({
   request,
   context,
@@ -393,14 +415,12 @@ async function predictiveSearch({
 
   if (!term) return {type, term, result: getEmptyPredictiveSearchResult()};
 
-  // Predictively search articles, collections, pages, products, and queries (suggestions)
   const {
     predictiveSearch: items,
     errors,
   }: PredictiveSearchQuery & {errors?: Array<{message: string}>} =
     await storefront.query(PREDICTIVE_SEARCH_QUERY, {
       variables: {
-        // customize search options as needed
         limit,
         limitScope: 'EACH',
         term,

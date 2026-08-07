@@ -8,7 +8,7 @@ type SelectedPolicies = keyof Pick<
 >;
 
 export const meta: Route.MetaFunction = ({data}) => {
-  return [{title: `Hydrogen | ${data?.policy.title ?? ''}`}];
+  return [{title: `Taylan Wear | ${data?.policy.title ?? 'Politika'}`}];
 };
 
 export async function loader({params, context}: Route.LoaderArgs) {
@@ -45,20 +45,21 @@ export default function Policy() {
   const {policy} = useLoaderData<typeof loader>();
 
   return (
-    <div className="policy">
-      <br />
-      <br />
-      <div>
-        <Link to="/policies">← Back to Policies</Link>
-      </div>
-      <br />
-      <h1>{policy.title}</h1>
-      <div dangerouslySetInnerHTML={{__html: policy.body}} />
-    </div>
+    <article className="content-page">
+      <header className="content-page__header">
+        <Link className="content-page__back" to="/policies">
+          ← Tüm politikalar
+        </Link>
+        <h1 className="content-page__title">{policy.title}</h1>
+      </header>
+      <div
+        className="content-page__body"
+        dangerouslySetInnerHTML={{__html: policy.body}}
+      />
+    </article>
   );
 }
 
-// NOTE: https://shopify.dev/docs/api/storefront/latest/objects/Shop
 const POLICY_CONTENT_QUERY = `#graphql
   fragment Policy on ShopPolicy {
     body

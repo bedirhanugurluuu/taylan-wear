@@ -1,4 +1,5 @@
-import {redirect, useLoaderData} from 'react-router';
+import {useState} from 'react';
+import {Link, useLoaderData} from 'react-router';
 import type {Route} from './+types/products.$handle';
 import {
   getSelectedProductOptions,
@@ -9,13 +10,21 @@ import {
   useSelectedOptionInUrlParam,
 } from '@shopify/hydrogen';
 import {ProductPrice} from '~/components/ProductPrice';
-import {ProductImage} from '~/components/ProductImage';
 import {ProductForm} from '~/components/ProductForm';
+import {ProductGallery} from '~/components/product/ProductGallery';
+import {
+  ProductInfoAccordion,
+  ProductInfoModal,
+  type ProductInfoTabId,
+} from '~/components/product/ProductInfoModal';
+import {RelatedProducts} from '~/components/product/RelatedProducts';
+import {IconHeart} from '~/components/icons/HeaderIcons';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
+import {PRODUCT_PAGE} from '~/lib/site-content';
 
 export const meta: Route.MetaFunction = ({data}) => {
   return [
-    {title: `Hydrogen | ${data?.product.title ?? ''}`},
+    {title: `Taylan Wear | ${data?.product.title ?? ''}`},
     {
       rel: 'canonical',
       href: `/products/${data?.product.handle}`,
@@ -24,19 +33,13 @@ export const meta: Route.MetaFunction = ({data}) => {
 };
 
 export async function loader(args: Route.LoaderArgs) {
-  // Start fetching non-critical data without blocking time to first byte
-  const deferredData = loadDeferredData(args);
-
-  // Await the critical data required to render initial state of the page
   const criticalData = await loadCriticalData(args);
-
-  return {...deferredData, ...criticalData};
+  return {
+    ...criticalData,
+    relatedProducts: loadRelatedProducts(args.context, criticalData.product.id),
+  };
 }
 
-/**
- * Load data necessary for rendering content above the fold. This is the critical data
- * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
- */
 async function loadCriticalData({context, params, request}: Route.LoaderArgs) {
   const {handle} = params;
   const {storefront} = context;
@@ -49,14 +52,12 @@ async function loadCriticalData({context, params, request}: Route.LoaderArgs) {
     storefront.query(PRODUCT_QUERY, {
       variables: {handle, selectedOptions: getSelectedProductOptions(request)},
     }),
-    // Add other queries here, so that they are loaded in parallel
   ]);
 
   if (!product?.id) {
     throw new Response(null, {status: 404});
   }
 
-  // The API handle might be localized, so redirect to the localized handle
   redirectIfHandleIsLocalized(request, {handle, data: product});
 
   return {
@@ -64,62 +65,149 @@ async function loadCriticalData({context, params, request}: Route.LoaderArgs) {
   };
 }
 
-/**
- * Load data for rendering content below the fold. This data is deferred and will be
- * fetched after the initial page load. If it's unavailable, the page should still 200.
- * Make sure to not throw any errors here, as it will cause the page to 500.
- */
-function loadDeferredData({context, params}: Route.LoaderArgs) {
-  // Put any API calls that is not critical to be available on first page render
-  // For example: product reviews, product recommendations, social feeds.
+function loadRelatedProducts(
+  context: Route.LoaderArgs['context'],
+  productId: string,
+) {
+  return context.storefront
+    .query(RELATED_PRODUCTS_QUERY, {
+      variables: {productId},
+    })
+    .then(async (response) => {
+      if (response?.productRecommendations?.length) return response;
 
-  return {};
+      const fallback = await context.storefront.query(RELATED_FALLBACK_QUERY);
+      return {
+        productRecommendations: (fallback.products?.nodes ?? []).filter(
+          (item: {id: string}) => item.id !== productId,
+        ),
+      };
+    })
+    .catch((error: Error) => {
+      console.error(error);
+      return null;
+    });
+}
+
+function getMetafieldText(
+  metafield: {value?: string | null} | null | undefined,
+  fallback: string,
+) {
+  const value = metafield?.value?.trim();
+  return value || fallback;
 }
 
 export default function Product() {
-  const {product} = useLoaderData<typeof loader>();
+  const {product, relatedProducts} = useLoaderData<typeof loader>();
+  const [infoOpen, setInfoOpen] = useState(false);
+  const [infoTab, setInfoTab] = useState<ProductInfoTabId>('details');
 
-  // Optimistically selects a variant with given available variant information
   const selectedVariant = useOptimisticVariant(
     product.selectedOrFirstAvailableVariant,
     getAdjacentAndFirstAvailableVariants(product),
   );
 
-  // Sets the search param to the selected variant without navigation
-  // only when no search params are set in the url
   useSelectedOptionInUrlParam(selectedVariant.selectedOptions);
 
-  // Get the product options array
   const productOptions = getProductOptions({
     ...product,
     selectedOrFirstAvailableVariant: selectedVariant,
   });
 
-  const {title, descriptionHtml} = product;
+  const {title} = product;
+  const images = product.images?.nodes ?? [];
+  const collection = product.collections?.nodes?.[0];
+  const viewAllHref = collection
+    ? `/collections/${collection.handle}`
+    : '/collections/all';
+
+  const galleryImages =
+    images.length > 0
+      ? images
+      : selectedVariant?.image
+        ? [selectedVariant.image]
+        : [];
+
+  const infoContent = {
+    details: getMetafieldText(
+      product.details,
+      product.descriptionHtml?.trim() || PRODUCT_PAGE.defaults.details,
+    ),
+    quality: getMetafieldText(product.quality, PRODUCT_PAGE.defaults.quality),
+    fit: getMetafieldText(product.fit, PRODUCT_PAGE.defaults.fit),
+  };
+
+  const openInfo = (tab: ProductInfoTabId) => {
+    setInfoTab(tab);
+    setInfoOpen(true);
+  };
 
   return (
-    <div className="product">
-      <ProductImage image={selectedVariant?.image} />
-      <div className="product-main">
-        <h1>{title}</h1>
-        <ProductPrice
-          price={selectedVariant?.price}
-          compareAtPrice={selectedVariant?.compareAtPrice}
-        />
-        <br />
-        <ProductForm
-          productOptions={productOptions}
-          selectedVariant={selectedVariant}
-        />
-        <br />
-        <br />
-        <p>
-          <strong>Description</strong>
-        </p>
-        <br />
-        <div dangerouslySetInnerHTML={{__html: descriptionHtml}} />
-        <br />
+    <div className="product-page">
+      <div className="product-page__layout">
+        <div className="product-page__gallery">
+          <ProductGallery images={galleryImages} title={title} />
+        </div>
+
+        <div className="product-page__info">
+          <nav className="product-breadcrumb" aria-label="Breadcrumb">
+            <Link to="/">Ana sayfa</Link>
+            <span aria-hidden="true">/</span>
+            {collection ? (
+              <>
+                <Link to={`/collections/${collection.handle}`}>
+                  {collection.title}
+                </Link>
+                <span aria-hidden="true">/</span>
+              </>
+            ) : (
+              <>
+                <Link to="/collections/all">Katalog</Link>
+                <span aria-hidden="true">/</span>
+              </>
+            )}
+            <span aria-current="page">{title}</span>
+          </nav>
+
+          <div className="product-page__heading">
+            <h1 className="product-page__title">{title}</h1>
+            <button
+              type="button"
+              className="product-page__wishlist"
+              aria-label="Favorilere ekle"
+            >
+              <IconHeart size={22} />
+            </button>
+          </div>
+
+          <div className="product-page__price">
+            <ProductPrice
+              price={selectedVariant?.price}
+              compareAtPrice={selectedVariant?.compareAtPrice}
+            />
+          </div>
+
+          <ProductForm
+            productOptions={productOptions}
+            selectedVariant={selectedVariant}
+            onOpenInfo={openInfo}
+          />
+
+          <ProductInfoAccordion onOpen={openInfo} />
+        </div>
       </div>
+
+      <ProductInfoModal
+        key={infoOpen ? infoTab : 'closed'}
+        open={infoOpen}
+        initialTab={infoTab}
+        title={title}
+        content={infoContent}
+        onClose={() => setInfoOpen(false)}
+      />
+
+      <RelatedProducts products={relatedProducts} viewAllHref={viewAllHref} />
+
       <Analytics.ProductView
         data={{
           products: [
@@ -186,6 +274,30 @@ const PRODUCT_FRAGMENT = `#graphql
     description
     encodedVariantExistence
     encodedVariantAvailability
+    images(first: 12) {
+      nodes {
+        id
+        url
+        altText
+        width
+        height
+      }
+    }
+    collections(first: 1) {
+      nodes {
+        handle
+        title
+      }
+    }
+    details: metafield(namespace: "custom", key: "details") {
+      value
+    }
+    quality: metafield(namespace: "custom", key: "quality") {
+      value
+    }
+    fit: metafield(namespace: "custom", key: "fit") {
+      value
+    }
     options {
       name
       optionValues {
@@ -229,4 +341,62 @@ const PRODUCT_QUERY = `#graphql
     }
   }
   ${PRODUCT_FRAGMENT}
+` as const;
+
+const RELATED_PRODUCT_CARD_FRAGMENT = `#graphql
+  fragment RelatedProductCard on Product {
+    id
+    title
+    handle
+    tags
+    priceRange {
+      minVariantPrice {
+        amount
+        currencyCode
+      }
+    }
+    images(first: 2) {
+      nodes {
+        id
+        url
+        altText
+        width
+        height
+      }
+    }
+    options {
+      name
+      optionValues {
+        name
+        swatch {
+          color
+        }
+      }
+    }
+  }
+` as const;
+
+const RELATED_PRODUCTS_QUERY = `#graphql
+  ${RELATED_PRODUCT_CARD_FRAGMENT}
+  query RelatedProducts(
+    $productId: ID!
+    $country: CountryCode
+    $language: LanguageCode
+  ) @inContext(country: $country, language: $language) {
+    productRecommendations(productId: $productId) {
+      ...RelatedProductCard
+    }
+  }
+` as const;
+
+const RELATED_FALLBACK_QUERY = `#graphql
+  ${RELATED_PRODUCT_CARD_FRAGMENT}
+  query RelatedProductsFallback($country: CountryCode, $language: LanguageCode)
+    @inContext(country: $country, language: $language) {
+    products(first: 10, sortKey: BEST_SELLING) {
+      nodes {
+        ...RelatedProductCard
+      }
+    }
+  }
 ` as const;

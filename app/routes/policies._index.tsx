@@ -2,6 +2,10 @@ import {useLoaderData, Link} from 'react-router';
 import type {Route} from './+types/policies._index';
 import type {PoliciesQuery, PolicyItemFragment} from 'storefrontapi.generated';
 
+export const meta: Route.MetaFunction = () => {
+  return [{title: 'Taylan Wear | Politikalar'}];
+};
+
 export async function loader({context}: Route.LoaderArgs) {
   const data: PoliciesQuery = await context.storefront.query(POLICIES_QUERY);
 
@@ -25,15 +29,15 @@ export default function Policies() {
   const {policies} = useLoaderData<typeof loader>();
 
   return (
-    <div className="policies">
-      <h1>Policies</h1>
-      <div>
+    <div className="policies-index">
+      <h1 className="policies-index__title">Politikalar</h1>
+      <ul className="policies-index__list">
         {policies.map((policy) => (
-          <fieldset key={policy.id}>
+          <li key={policy.id}>
             <Link to={`/policies/${policy.handle}`}>{policy.title}</Link>
-          </fieldset>
+          </li>
         ))}
-      </div>
+      </ul>
     </div>
   );
 }

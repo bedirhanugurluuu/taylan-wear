@@ -12,7 +12,11 @@ import {
 } from 'react-router';
 import type {Route} from './+types/root';
 import favicon from '~/assets/favicon.svg';
-import {FOOTER_QUERY, HEADER_QUERY} from '~/lib/fragments';
+import {HEADER_QUERY} from '~/lib/fragments';
+import {
+  FEATURED_PRODUCTS_QUERY,
+  NEW_PRODUCTS_QUERY,
+} from '~/lib/product-queries';
 import resetStyles from '~/styles/reset.css?url';
 import appStyles from '~/styles/app.css?url';
 import tailwindCss from './styles/tailwind.css?url';
@@ -62,6 +66,23 @@ export function links() {
       rel: 'preconnect',
       href: 'https://shop.app',
     },
+    {
+      rel: 'preconnect',
+      href: 'https://fonts.googleapis.com',
+    },
+    {
+      rel: 'preconnect',
+      href: 'https://fonts.gstatic.com',
+      crossOrigin: 'anonymous',
+    },
+    // Preload local CSS early so navigations / remounts reapply faster
+    {rel: 'preload', as: 'style', href: tailwindCss},
+    {rel: 'preload', as: 'style', href: resetStyles},
+    {rel: 'preload', as: 'style', href: appStyles},
+    {
+      rel: 'stylesheet',
+      href: 'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=optional',
+    },
     {rel: 'icon', type: 'image/svg+xml', href: favicon},
   ];
 }
@@ -101,15 +122,12 @@ export async function loader(args: Route.LoaderArgs) {
 async function loadCriticalData({context}: Route.LoaderArgs) {
   const {storefront} = context;
 
-  const [header] = await Promise.all([
-    storefront.query(HEADER_QUERY, {
-      cache: storefront.CacheLong(),
-      variables: {
-        headerMenuHandle: 'main-menu', // Adjust to your header menu handle
-      },
-    }),
-    // Add other queries here, so that they are loaded in parallel
-  ]);
+  const header = await storefront.query(HEADER_QUERY, {
+    cache: storefront.CacheLong(),
+    variables: {
+      headerMenuHandle: 'main-menu', // Adjust to your header menu handle
+    },
+  });
 
   return {header};
 }
@@ -120,25 +138,23 @@ async function loadCriticalData({context}: Route.LoaderArgs) {
  * Make sure to not throw any errors here, as it will cause the page to 500.
  */
 function loadDeferredData({context}: Route.LoaderArgs) {
-  const {storefront, customerAccount, cart} = context;
+  const {customerAccount, cart, storefront} = context;
 
-  // defer the footer query (below the fold)
-  const footer = storefront
-    .query(FOOTER_QUERY, {
-      cache: storefront.CacheLong(),
-      variables: {
-        footerMenuHandle: 'footer', // Adjust to your footer menu handle
-      },
+  const featuredProducts = storefront
+    .query(FEATURED_PRODUCTS_QUERY)
+    .then(async (data) => {
+      if (data?.products?.nodes?.length) return data;
+      return storefront.query(NEW_PRODUCTS_QUERY);
     })
     .catch((error: Error) => {
-      // Log query errors, but don't throw them so the page can still render
       console.error(error);
-      return null;
+      return storefront.query(NEW_PRODUCTS_QUERY).catch(() => null);
     });
+
   return {
     cart: cart.get(),
     isLoggedIn: customerAccount.isLoggedIn(),
-    footer,
+    featuredProducts,
   };
 }
 
@@ -146,13 +162,39 @@ export function Layout({children}: {children?: React.ReactNode}) {
   const nonce = useNonce();
 
   return (
-    <html lang="en">
+    <html lang="tr" suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
-        <link rel="stylesheet" href={tailwindCss}></link>
-        <link rel="stylesheet" href={resetStyles}></link>
-        <link rel="stylesheet" href={appStyles}></link>
+        {/*
+          Critical shell styles stay inlined so a brief stylesheet remount
+          (FOUC on nav / StrictMode / HMR) never shows a naked HTML skeleton.
+        */}
+        <style
+          nonce={nonce}
+          dangerouslySetInnerHTML={{
+            __html: `
+              :root{--header-height:64px;--top-bar-height:34px;--font-body:system-ui,-apple-system,sans-serif}
+              html,body{margin:0;background:#fff;color:#000;font-family:var(--font-body)}
+              .site-header{position:sticky;top:0;z-index:50}
+              .top-bar{background:#000;color:#fff;min-height:var(--top-bar-height);font-size:.6875rem;letter-spacing:.06em;text-transform:uppercase}
+              .top-bar__inner{display:grid;grid-template-columns:1fr 1fr;gap:1rem;align-items:center;min-height:var(--top-bar-height);padding:.4rem 1rem}
+              .top-bar__left{display:none}.top-bar__right{text-align:center;grid-column:1/-1}
+              .header{display:flex;align-items:center;justify-content:space-between;gap:1rem;height:var(--header-height);padding:0 1rem;background:#fff;color:#000}
+              .header__logo{color:inherit;text-decoration:none;font-size:1rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;white-space:nowrap}
+              .header__actions{display:flex;align-items:center;gap:.35rem;margin-left:auto}
+              .header-menu--desktop{display:none}
+              @media(min-width:768px){
+                .top-bar__left{display:block}.top-bar__right{text-align:right;grid-column:auto}
+                .header-menu--desktop{display:flex}.header__menu-toggle{display:none}
+              }
+            `,
+          }}
+        />
+        {/* Stylesheets before Meta/Links so the browser discovers them first in the stream */}
+        <link rel="stylesheet" href={tailwindCss} />
+        <link rel="stylesheet" href={resetStyles} />
+        <link rel="stylesheet" href={appStyles} />
         <Meta />
         <Links />
       </head>
@@ -187,25 +229,29 @@ export default function App() {
 
 export function ErrorBoundary() {
   const error = useRouteError();
-  let errorMessage = 'Unknown error';
   let errorStatus = 500;
+  let isNotFound = false;
 
   if (isRouteErrorResponse(error)) {
-    errorMessage = error?.data?.message ?? error.data;
     errorStatus = error.status;
-  } else if (error instanceof Error) {
-    errorMessage = error.message;
+    isNotFound = error.status === 404;
   }
 
   return (
     <div className="route-error">
-      <h1>Oops</h1>
-      <h2>{errorStatus}</h2>
-      {errorMessage && (
-        <fieldset>
-          <pre>{errorMessage}</pre>
-        </fieldset>
-      )}
+      <p className="route-error__brand">Taylan Wear</p>
+      <p className="route-error__code">{errorStatus}</p>
+      <h1 className="route-error__title">
+        {isNotFound ? 'Sayfa bulunamadı' : 'Bir şeyler ters gitti'}
+      </h1>
+      <p className="route-error__text">
+        {isNotFound
+          ? 'Aradığın sayfa taşınmış veya hiç var olmamış olabilir.'
+          : 'Beklenmeyen bir hata oluştu. Ana sayfaya dönüp tekrar deneyebilirsin.'}
+      </p>
+      <a className="route-error__cta" href="/">
+        Ana sayfaya dön
+      </a>
     </div>
   );
 }

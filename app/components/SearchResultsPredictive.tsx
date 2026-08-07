@@ -89,7 +89,7 @@ function SearchResultsPredictiveArticles({
 
   return (
     <div className="predictive-search-result" key="articles">
-      <h5>Articles</h5>
+      <h5>Yazılar</h5>
       <ul>
         {articles.map((article) => {
           const articleUrl = urlWithTrackingParams({
@@ -130,7 +130,7 @@ function SearchResultsPredictiveCollections({
 
   return (
     <div className="predictive-search-result" key="collections">
-      <h5>Collections</h5>
+      <h5>Koleksiyonlar</h5>
       <ul>
         {collections.map((collection) => {
           const collectionUrl = urlWithTrackingParams({
@@ -171,7 +171,7 @@ function SearchResultsPredictivePages({
 
   return (
     <div className="predictive-search-result" key="pages">
-      <h5>Pages</h5>
+      <h5>Sayfalar</h5>
       <ul>
         {pages.map((page) => {
           const pageUrl = urlWithTrackingParams({
@@ -204,7 +204,7 @@ function SearchResultsPredictiveProducts({
 
   return (
     <div className="predictive-search-result" key="products">
-      <h5>Products</h5>
+      <h5>Ürünler</h5>
       <ul>
         {products.map((product) => {
           const productUrl = urlWithTrackingParams({
@@ -268,8 +268,8 @@ function SearchResultsPredictiveEmpty({
   }
 
   return (
-    <p>
-      No results found for <q>{term.current}</q>
+    <p className="predictive-search__empty">
+      <q>{term.current}</q> için sonuç bulunamadı.
     </p>
   );
 }
@@ -288,6 +288,8 @@ function usePredictiveSearch(): UsePredictiveSearchReturn {
 
   if (fetcher?.state === 'loading') {
     term.current = String(fetcher.formData?.get('q') || '');
+  } else if (fetcher?.data && 'term' in fetcher.data) {
+    term.current = String(fetcher.data.term || '');
   }
 
   // capture the search input element as a ref

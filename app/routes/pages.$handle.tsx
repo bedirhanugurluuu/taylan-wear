@@ -3,7 +3,7 @@ import type {Route} from './+types/pages.$handle';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
 
 export const meta: Route.MetaFunction = ({data}) => {
-  return [{title: `Hydrogen | ${data?.page.title ?? ''}`}];
+  return [{title: `Taylan Wear | ${data?.page.title ?? 'Sayfa'}`}];
 };
 
 export async function loader(args: Route.LoaderArgs) {
@@ -58,12 +58,15 @@ export default function Page() {
   const {page} = useLoaderData<typeof loader>();
 
   return (
-    <div className="page">
-      <header>
-        <h1>{page.title}</h1>
+    <article className="content-page">
+      <header className="content-page__header">
+        <h1 className="content-page__title">{page.title}</h1>
       </header>
-      <main dangerouslySetInnerHTML={{__html: page.body}} />
-    </div>
+      <div
+        className="content-page__body"
+        dangerouslySetInnerHTML={{__html: page.body}}
+      />
+    </article>
   );
 }
 

@@ -1,67 +1,87 @@
 import {Await, Link} from 'react-router';
-import {Suspense, useId} from 'react';
+import {Suspense, useId, useState} from 'react';
 import type {
   CartApiQueryFragment,
-  FooterQuery,
   HeaderQuery,
 } from 'storefrontapi.generated';
-import {Aside} from '~/components/Aside';
+import {Aside, useAside} from '~/components/Aside';
 import {Footer} from '~/components/Footer';
 import {Header, HeaderMenu} from '~/components/Header';
+import {TopBar} from '~/components/layout/TopBar';
 import {CartMain} from '~/components/CartMain';
 import {
   SEARCH_ENDPOINT,
   SearchFormPredictive,
 } from '~/components/SearchFormPredictive';
 import {SearchResultsPredictive} from '~/components/SearchResultsPredictive';
+import {
+  filterNewTaggedProducts,
+  ProductRail,
+} from '~/components/product/ProductRail';
+import type {ProductCardProduct} from '~/components/product/ProductCard';
+
+type FeaturedProductsPromise = Promise<{
+  products: {nodes: ProductCardProduct[]};
+} | null>;
 
 interface PageLayoutProps {
   cart: Promise<CartApiQueryFragment | null>;
-  footer: Promise<FooterQuery | null>;
   header: HeaderQuery;
   isLoggedIn: Promise<boolean>;
   publicStoreDomain: string;
+  featuredProducts?: FeaturedProductsPromise;
   children?: React.ReactNode;
 }
 
 export function PageLayout({
   cart,
   children = null,
-  footer,
   header,
   isLoggedIn,
   publicStoreDomain,
+  featuredProducts,
 }: PageLayoutProps) {
   return (
     <Aside.Provider>
-      <CartAside cart={cart} />
-      <SearchAside />
+      <CartAside cart={cart} featuredProducts={featuredProducts} />
+      <SearchAside featuredProducts={featuredProducts} />
       <MobileMenuAside header={header} publicStoreDomain={publicStoreDomain} />
-      {header && (
-        <Header
-          header={header}
-          cart={cart}
-          isLoggedIn={isLoggedIn}
-          publicStoreDomain={publicStoreDomain}
-        />
-      )}
+      <div className="site-header">
+        <TopBar />
+        {header ? (
+          <Header
+            header={header}
+            cart={cart}
+            isLoggedIn={isLoggedIn}
+            publicStoreDomain={publicStoreDomain}
+          />
+        ) : null}
+      </div>
       <main>{children}</main>
-      <Footer
-        footer={footer}
-        header={header}
-        publicStoreDomain={publicStoreDomain}
-      />
+      <Footer />
     </Aside.Provider>
   );
 }
 
-function CartAside({cart}: {cart: PageLayoutProps['cart']}) {
+function CartAside({
+  cart,
+  featuredProducts,
+}: {
+  cart: PageLayoutProps['cart'];
+  featuredProducts?: FeaturedProductsPromise;
+}) {
   return (
-    <Aside type="cart" heading="CART">
-      <Suspense fallback={<p>Loading cart ...</p>}>
+    <Aside type="cart" heading="Sepet">
+      <Suspense fallback={<p className="aside-panel__loading">Yükleniyor…</p>}>
         <Await resolve={cart}>
           {(cart) => {
-            return <CartMain cart={cart} layout="aside" />;
+            return (
+              <CartMain
+                cart={cart}
+                layout="aside"
+                featuredProducts={featuredProducts}
+              />
+            );
           }}
         </Await>
       </Suspense>
@@ -69,36 +89,93 @@ function CartAside({cart}: {cart: PageLayoutProps['cart']}) {
   );
 }
 
-function SearchAside() {
+function SearchAside({
+  featuredProducts,
+}: {
+  featuredProducts?: FeaturedProductsPromise;
+}) {
   const queriesDatalistId = useId();
+  const {close} = useAside();
+  const [query, setQuery] = useState('');
+
   return (
-    <Aside type="search" heading="SEARCH">
+    <Aside type="search" heading="Ara">
       <div className="predictive-search">
-        <br />
         <SearchFormPredictive>
           {({fetchResults, goToSearch, inputRef}) => (
-            <>
+            <div className="predictive-search__form">
               <input
+                className="predictive-search__input"
                 name="q"
-                onChange={fetchResults}
+                onChange={(event) => {
+                  setQuery(event.target.value);
+                  fetchResults(event);
+                }}
                 onFocus={fetchResults}
-                placeholder="Search"
+                placeholder="Ürün, kategori ara…"
                 ref={inputRef}
                 type="search"
                 list={queriesDatalistId}
+                autoComplete="off"
               />
-              &nbsp;
-              <button onClick={goToSearch}>Search</button>
-            </>
+              <button
+                type="button"
+                className="predictive-search__submit"
+                onClick={goToSearch}
+              >
+                Ara
+              </button>
+            </div>
           )}
         </SearchFormPredictive>
 
         <SearchResultsPredictive>
           {({items, total, term, state, closeSearch}) => {
             const {articles, collections, pages, products, queries} = items;
+            const hasTerm = Boolean(query.trim());
 
-            if (state === 'loading' && term.current) {
-              return <div>Loading...</div>;
+            if (state === 'loading' && hasTerm) {
+              return <p className="aside-panel__loading">Aranıyor…</p>;
+            }
+
+            if (!hasTerm) {
+              return featuredProducts ? (
+                <div className="predictive-search__idle">
+                  <Suspense
+                    fallback={
+                      <div className="product-slider__loading product-slider__loading--aside" />
+                    }
+                  >
+                    <Await resolve={featuredProducts}>
+                      {(response) => {
+                        const nodes = filterNewTaggedProducts(
+                          (response?.products?.nodes ??
+                            []) as ProductCardProduct[],
+                        );
+                        if (!nodes.length) {
+                          return (
+                            <p className="predictive-search__empty">
+                              Aramak istediğin ürünü yaz.
+                            </p>
+                          );
+                        }
+                        return (
+                          <ProductRail
+                            products={nodes}
+                            title="Bu haftanın yeni ürünleri"
+                            variant="aside"
+                            onProductClick={close}
+                          />
+                        );
+                      }}
+                    </Await>
+                  </Suspense>
+                </div>
+              ) : (
+                <p className="predictive-search__empty">
+                  Aramak istediğin ürünü yaz.
+                </p>
+              );
             }
 
             if (!total) {
@@ -106,7 +183,7 @@ function SearchAside() {
             }
 
             return (
-              <>
+              <div className="predictive-search__results">
                 <SearchResultsPredictive.Queries
                   queries={queries}
                   queriesDatalistId={queriesDatalistId}
@@ -133,16 +210,14 @@ function SearchAside() {
                 />
                 {term.current && total ? (
                   <Link
+                    className="predictive-search__view-all"
                     onClick={closeSearch}
                     to={`${SEARCH_ENDPOINT}?q=${term.current}`}
                   >
-                    <p>
-                      View all results for <q>{term.current}</q>
-                      &nbsp; →
-                    </p>
+                    “{term.current}” için tüm sonuçlar
                   </Link>
                 ) : null}
-              </>
+              </div>
             );
           }}
         </SearchResultsPredictive>
@@ -161,7 +236,7 @@ function MobileMenuAside({
   return (
     header.menu &&
     header.shop.primaryDomain?.url && (
-      <Aside type="mobile" heading="MENU">
+      <Aside type="mobile" heading="Menü">
         <HeaderMenu
           menu={header.menu}
           viewport="mobile"

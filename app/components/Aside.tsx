@@ -4,8 +4,8 @@ import {
   useContext,
   useEffect,
   useState,
+  useId,
 } from 'react';
-import {useId} from 'react';
 
 type AsideType = 'search' | 'cart' | 'mobile' | 'closed';
 type AsideContextValue = {
@@ -14,16 +14,6 @@ type AsideContextValue = {
   close: () => void;
 };
 
-/**
- * A side bar component with Overlay
- * @example
- * ```jsx
- * <Aside type="search" heading="SEARCH">
- *  <input type="search" />
- *  ...
- * </Aside>
- * ```
- */
 export function Aside({
   children,
   heading,
@@ -36,10 +26,12 @@ export function Aside({
   const {type: activeType, close} = useAside();
   const expanded = type === activeType;
   const id = useId();
+
   useEffect(() => {
     const abortController = new AbortController();
 
     if (expanded) {
+      document.body.style.overflow = 'hidden';
       document.addEventListener(
         'keydown',
         function handler(event: KeyboardEvent) {
@@ -50,25 +42,42 @@ export function Aside({
         {signal: abortController.signal},
       );
     }
-    return () => abortController.abort();
+
+    return () => {
+      abortController.abort();
+      if (expanded) document.body.style.overflow = '';
+    };
   }, [close, expanded]);
 
   return (
     <div
-      aria-modal
-      className={`overlay ${expanded ? 'expanded' : ''}`}
+      aria-modal={expanded}
+      className={`overlay overlay--${type}${expanded ? ' expanded' : ''}`}
       role="dialog"
       aria-labelledby={id}
+      aria-hidden={!expanded}
     >
-      <button className="close-outside" onClick={close} />
-      <aside>
-        <header>
-          <h3 id={id}>{heading}</h3>
-          <button className="close reset" onClick={close} aria-label="Close">
-            &times;
+      <button
+        type="button"
+        className="close-outside"
+        onClick={close}
+        aria-label="Kapat"
+      />
+      <aside className={`aside-panel aside-panel--${type}`}>
+        <header className="aside-panel__header">
+          <h3 id={id} className="aside-panel__title">
+            {heading}
+          </h3>
+          <button
+            type="button"
+            className="aside-panel__close"
+            onClick={close}
+            aria-label="Kapat"
+          >
+            ×
           </button>
         </header>
-        <main>{children}</main>
+        <div className="aside-panel__body">{children}</div>
       </aside>
     </div>
   );

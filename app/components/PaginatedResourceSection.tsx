@@ -23,13 +23,13 @@ export function PaginatedResourceSection<NodesType>({
         );
 
         return (
-          <div>
-            <PreviousLink>
+          <div className="pagination-section">
+            <PreviousLink className="pagination-btn pagination-btn--prev">
               {isLoading ? (
-                'Loading...'
+                'Yükleniyor...'
               ) : (
                 <span>
-                  <span aria-hidden="true">↑</span> Load previous
+                  <span aria-hidden="true">↑</span> Öncekileri yükle
                 </span>
               )}
             </PreviousLink>
@@ -44,14 +44,8 @@ export function PaginatedResourceSection<NodesType>({
             ) : (
               resourcesMarkup
             )}
-            <NextLink>
-              {isLoading ? (
-                'Loading...'
-              ) : (
-                <span>
-                  Load more <span aria-hidden="true">↓</span>
-                </span>
-              )}
+            <NextLink className="pagination-btn pagination-btn--next">
+              {isLoading ? 'Yükleniyor...' : <span>Daha fazla</span>}
             </NextLink>
           </div>
         );

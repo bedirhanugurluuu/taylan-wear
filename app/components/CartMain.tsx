@@ -1,19 +1,28 @@
+import {Suspense} from 'react';
+import {Await, Link} from 'react-router';
 import {useOptimisticCart} from '@shopify/hydrogen';
-import {Link} from 'react-router';
 import type {CartApiQueryFragment} from 'storefrontapi.generated';
 import {useAside} from '~/components/Aside';
 import {CartLineItem, type CartLine} from '~/components/CartLineItem';
 import {CartSummary} from './CartSummary';
+import {
+  filterNewTaggedProducts,
+  ProductRail,
+} from '~/components/product/ProductRail';
+import type {ProductCardProduct} from '~/components/product/ProductCard';
 
 export type CartLayout = 'page' | 'aside';
 
 export type CartMainProps = {
   cart: CartApiQueryFragment | null;
   layout: CartLayout;
+  featuredProducts?: Promise<{
+    products: {nodes: ProductCardProduct[]};
+  } | null>;
 };
 
 export type LineItemChildrenMap = {[parentId: string]: CartLine[]};
-/** Returns a map of all line items and their children. */
+
 function getLineItemChildrenMap(lines: CartLine[]): LineItemChildrenMap {
   const children: LineItemChildrenMap = {};
   for (const line of lines) {
@@ -32,37 +41,39 @@ function getLineItemChildrenMap(lines: CartLine[]): LineItemChildrenMap {
   }
   return children;
 }
-/**
- * The main cart component that displays the cart items and summary.
- * It is used by both the /cart route and the cart aside dialog.
- */
-export function CartMain({layout, cart: originalCart}: CartMainProps) {
-  // The useOptimisticCart hook applies pending actions to the cart
-  // so the user immediately sees feedback when they modify the cart.
+
+export function CartMain({
+  layout,
+  cart: originalCart,
+  featuredProducts,
+}: CartMainProps) {
   const cart = useOptimisticCart(originalCart);
+  const {close} = useAside();
 
   const linesCount = Boolean(cart?.lines?.nodes?.length || 0);
-  const withDiscount =
-    cart &&
-    Boolean(cart?.discountCodes?.filter((code) => code.applicable)?.length);
-  const className = `cart-main ${withDiscount ? 'with-discount' : ''}`;
+  const className = `cart-main${
+    layout === 'aside' ? ' cart-main--aside' : ' cart-main--page'
+  }`;
   const cartHasItems = cart?.totalQuantity ? cart.totalQuantity > 0 : false;
   const childrenMap = getLineItemChildrenMap(cart?.lines?.nodes ?? []);
 
   return (
     <section
       className={className}
-      aria-label={layout === 'page' ? 'Cart page' : 'Cart drawer'}
+      aria-label={layout === 'page' ? 'Sepet sayfası' : 'Sepet'}
     >
-      <CartEmpty hidden={linesCount} layout={layout} />
-      <div className="cart-details">
-        <p id="cart-lines" className="sr-only">
-          Line items
-        </p>
-        <div>
-          <ul aria-labelledby="cart-lines">
+      <CartEmpty
+        hidden={linesCount}
+        layout={layout}
+        featuredProducts={featuredProducts}
+      />
+      <div className="cart-details" hidden={!linesCount}>
+        <div className="cart-details__scroll">
+          <p id="cart-lines" className="sr-only">
+            Ürünler
+          </p>
+          <ul className="cart-lines" aria-labelledby="cart-lines">
             {(cart?.lines?.nodes ?? []).map((line) => {
-              // we do not render non-parent lines at the root of the cart
               if (
                 'parentRelationship' in line &&
                 line.parentRelationship?.parent
@@ -79,8 +90,17 @@ export function CartMain({layout, cart: originalCart}: CartMainProps) {
               );
             })}
           </ul>
+
+          {layout === 'aside' && featuredProducts ? (
+            <AsideFeaturedRail
+              featuredProducts={featuredProducts}
+              title="Bunları da beğenebilirsin"
+              onProductClick={close}
+            />
+          ) : null}
         </div>
-        {cartHasItems && <CartSummary cart={cart} layout={layout} />}
+
+        {cartHasItems ? <CartSummary cart={cart} layout={layout} /> : null}
       </div>
     </section>
   );
@@ -88,22 +108,69 @@ export function CartMain({layout, cart: originalCart}: CartMainProps) {
 
 function CartEmpty({
   hidden = false,
+  layout,
+  featuredProducts,
 }: {
   hidden: boolean;
   layout?: CartMainProps['layout'];
+  featuredProducts?: CartMainProps['featuredProducts'];
 }) {
   const {close} = useAside();
   return (
-    <div hidden={hidden}>
-      <br />
-      <p>
-        Looks like you haven&rsquo;t added anything yet, let&rsquo;s get you
-        started!
-      </p>
-      <br />
-      <Link to="/collections" onClick={close} prefetch="viewport">
-        Continue shopping →
-      </Link>
+    <div className="cart-empty" hidden={hidden}>
+      <div className="cart-empty__intro">
+        <p className="cart-empty__text">Sepetin şu an boş.</p>
+        <p className="cart-empty__hint">
+          Beğendiğin parçaları ekleyerek alışverişe başlayabilirsin.
+        </p>
+        <Link
+          className="cart-empty__cta"
+          to="/collections/all"
+          onClick={close}
+          prefetch="viewport"
+        >
+          Alışverişe devam et
+        </Link>
+      </div>
+
+      {layout === 'aside' && featuredProducts ? (
+        <AsideFeaturedRail
+          featuredProducts={featuredProducts}
+          title="Bunları da beğenebilirsin"
+          onProductClick={close}
+        />
+      ) : null}
     </div>
+  );
+}
+
+function AsideFeaturedRail({
+  featuredProducts,
+  title,
+  onProductClick,
+}: {
+  featuredProducts: NonNullable<CartMainProps['featuredProducts']>;
+  title: string;
+  onProductClick: () => void;
+}) {
+  return (
+    <Suspense fallback={<div className="product-slider__loading product-slider__loading--aside" />}>
+      <Await resolve={featuredProducts}>
+        {(response) => {
+          const products = filterNewTaggedProducts(
+            (response?.products?.nodes ?? []) as ProductCardProduct[],
+          );
+          if (!products.length) return null;
+          return (
+            <ProductRail
+              products={products}
+              title={title}
+              variant="aside"
+              onProductClick={onProductClick}
+            />
+          );
+        }}
+      </Await>
+    </Suspense>
   );
 }

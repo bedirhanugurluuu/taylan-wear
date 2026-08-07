@@ -17,15 +17,41 @@ export function CartSummary({cart, layout}: CartSummaryProps) {
   const discountCodeInputId = useId();
   const giftCardHeadingId = useId();
   const giftCardInputId = useId();
+  const quantity = cart?.totalQuantity ?? 0;
+
+  if (layout === 'aside') {
+    return (
+      <div aria-labelledby={summaryId} className={className}>
+        <h4 id={summaryId} className="cart-summary__title">
+          Toplam tutar
+        </h4>
+        <dl role="group" className="cart-subtotal">
+          <dt>
+            {quantity} ürün
+          </dt>
+          <dd>
+            {cart?.cost?.subtotalAmount?.amount ? (
+              <Money data={cart.cost.subtotalAmount} />
+            ) : (
+              '-'
+            )}
+          </dd>
+        </dl>
+        <CartCheckoutActions checkoutUrl={cart?.checkoutUrl} />
+      </div>
+    );
+  }
 
   return (
     <div aria-labelledby={summaryId} className={className}>
-      <h4 id={summaryId}>Totals</h4>
+      <h4 id={summaryId} className="cart-summary__title">
+        Toplam tutar
+      </h4>
       <dl role="group" className="cart-subtotal">
-        <dt>Subtotal</dt>
+        <dt>{quantity} ürün</dt>
         <dd>
           {cart?.cost?.subtotalAmount?.amount ? (
-            <Money data={cart?.cost?.subtotalAmount} />
+            <Money data={cart.cost.subtotalAmount} />
           ) : (
             '-'
           )}
@@ -50,11 +76,10 @@ function CartCheckoutActions({checkoutUrl}: {checkoutUrl?: string}) {
   if (!checkoutUrl) return null;
 
   return (
-    <div>
-      <a href={checkoutUrl} target="_self">
-        <p>Continue to Checkout &rarr;</p>
+    <div className="cart-checkout">
+      <a className="cart-checkout__btn" href={checkoutUrl} target="_self">
+        Alışverişi tamamla
       </a>
-      <br />
     </div>
   );
 }
@@ -74,11 +99,10 @@ function CartDiscounts({
       ?.map(({code}) => code) || [];
 
   return (
-    <section aria-label="Discounts">
-      {/* Have existing discount, display it with a remove option */}
+    <section aria-label="İndirimler">
       <dl hidden={!codes.length}>
         <div>
-          <dt id={discountsHeadingId}>Discounts</dt>
+          <dt id={discountsHeadingId}>İndirimler</dt>
           <UpdateDiscountForm>
             <div
               className="cart-discount"
@@ -87,29 +111,27 @@ function CartDiscounts({
             >
               <code>{codes?.join(', ')}</code>
               &nbsp;
-              <button type="submit" aria-label="Remove discount">
-                Remove
+              <button type="submit" aria-label="İndirimi kaldır">
+                Kaldır
               </button>
             </div>
           </UpdateDiscountForm>
         </div>
       </dl>
 
-      {/* Show an input to apply a discount */}
       <UpdateDiscountForm discountCodes={codes}>
-        <div>
+        <div className="cart-code-row">
           <label htmlFor={discountCodeInputId} className="sr-only">
-            Discount code
+            İndirim kodu
           </label>
           <input
             id={discountCodeInputId}
             type="text"
             name="discountCode"
-            placeholder="Discount code"
+            placeholder="İndirim kodu"
           />
-          &nbsp;
-          <button type="submit" aria-label="Apply discount code">
-            Apply
+          <button type="submit" aria-label="İndirim kodunu uygula">
+            Uygula
           </button>
         </div>
       </UpdateDiscountForm>
@@ -193,10 +215,10 @@ function CartGiftCard({
   };
 
   return (
-    <section aria-label="Gift cards">
+    <section aria-label="Hediye kartları">
       {giftCardCodes && giftCardCodes.length > 0 && (
         <dl>
-          <dt id={giftCardHeadingId}>Applied Gift Card(s)</dt>
+          <dt id={giftCardHeadingId}>Hediye kartı</dt>
           {giftCardCodes.map((giftCard) => (
             <dd key={giftCard.id} className="cart-discount">
               <RemoveGiftCardForm
@@ -221,24 +243,23 @@ function CartGiftCard({
       )}
 
       <AddGiftCardForm fetcherKey="gift-card-add">
-        <div>
+        <div className="cart-code-row">
           <label htmlFor={giftCardInputId} className="sr-only">
-            Gift card code
+            Hediye kartı kodu
           </label>
           <input
             id={giftCardInputId}
             type="text"
             name="giftCardCode"
-            placeholder="Gift card code"
+            placeholder="Hediye kartı"
             ref={giftCardCodeInput}
           />
-          &nbsp;
           <button
             type="submit"
             disabled={giftCardAddFetcher.state !== 'idle'}
-            aria-label="Apply gift card code"
+            aria-label="Hediye kartını uygula"
           >
-            Apply
+            Uygula
           </button>
         </div>
       </AddGiftCardForm>
@@ -289,11 +310,11 @@ function RemoveGiftCardForm({
       &nbsp;
       <button
         type="submit"
-        aria-label={`Remove gift card ending in ${lastCharacters}`}
+        aria-label={`Hediye kartını kaldır (${lastCharacters})`}
         onClick={onRemoveClick}
         ref={buttonRef}
       >
-        Remove
+        Kaldır
       </button>
     </CartForm>
   );
