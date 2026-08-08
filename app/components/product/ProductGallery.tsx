@@ -18,51 +18,68 @@ export function ProductGallery({
   images: GalleryImage[];
   title: string;
 }) {
+  // Mobile-first: slider until desktop grid at 1024px
+  const [isDesktop, setIsDesktop] = useState(false);
   const [sliderReady, setSliderReady] = useState(false);
 
   useEffect(() => {
-    setSliderReady(true);
+    const media = window.matchMedia('(min-width: 1024px)');
+    const sync = () => setIsDesktop(media.matches);
+    sync();
+    media.addEventListener('change', sync);
+    return () => media.removeEventListener('change', sync);
   }, []);
+
+  useEffect(() => {
+    if (!isDesktop) setSliderReady(true);
+  }, [isDesktop]);
 
   if (images.length === 0) {
     return <div className="product-gallery product-gallery--empty" />;
   }
 
+  if (isDesktop) {
+    return (
+      <div className="product-gallery-wrap">
+        <div className="product-gallery product-gallery--grid">
+          {images.map((image, index) => (
+            <div
+              key={image.id ?? `${image.url}-${index}`}
+              className="product-gallery__item"
+            >
+              <Image
+                alt={image.altText || title}
+                data={image}
+                aspectRatio="4/5"
+                sizes="33vw"
+                loading={index < 2 ? 'eager' : 'lazy'}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="product-gallery-wrap">
-      <div className="product-gallery product-gallery--grid">
-        {images.map((image, index) => (
-          <div
-            key={image.id ?? `${image.url}-${index}`}
-            className="product-gallery__item"
-          >
-            <Image
-              alt={image.altText || title}
-              data={image}
-              aspectRatio="4/5"
-              sizes="33vw"
-              loading={index < 2 ? 'eager' : 'lazy'}
-            />
-          </div>
-        ))}
-      </div>
-
       <div className="product-gallery-slider">
         {sliderReady ? (
           <Splide
             className="product-gallery-splide"
             options={{
               type: 'slide',
-              perPage: 2,
+              perPage: 1,
               perMove: 1,
               gap: '4px',
               pagination: true,
               arrows: false,
               drag: true,
               speed: 450,
+              mediaQuery: 'min',
               breakpoints: {
-                767: {
-                  perPage: 1,
+                768: {
+                  perPage: 2,
                 },
               },
             }}
@@ -76,7 +93,7 @@ export function ProductGallery({
                     data={image}
                     aspectRatio="4/5"
                     sizes="(max-width: 767px) 100vw, 50vw"
-                    loading={index < 2 ? 'eager' : 'lazy'}
+                    loading={index < 1 ? 'eager' : 'lazy'}
                   />
                 </div>
               </SplideSlide>
@@ -84,7 +101,7 @@ export function ProductGallery({
           </Splide>
         ) : (
           <div className="product-gallery product-gallery--fallback">
-            {images.slice(0, 2).map((image, index) => (
+            {images.slice(0, 1).map((image, index) => (
               <div
                 key={image.id ?? `${image.url}-${index}`}
                 className="product-gallery__item"
@@ -93,8 +110,8 @@ export function ProductGallery({
                   alt={image.altText || title}
                   data={image}
                   aspectRatio="4/5"
-                  sizes="50vw"
-                  loading={index < 2 ? 'eager' : 'lazy'}
+                  sizes="100vw"
+                  loading="eager"
                 />
               </div>
             ))}

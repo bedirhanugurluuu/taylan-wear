@@ -1,26 +1,62 @@
-import {useState} from 'react';
+import {useEffect, useRef, useState} from 'react';
 import {Link, useNavigate} from 'react-router';
 import {Image, type MappedProductOptions} from '@shopify/hydrogen';
 import type {ProductFragment} from 'storefrontapi.generated';
 import {AddToCartButton} from '~/components/AddToCartButton';
 import {useAside} from '~/components/Aside';
 import type {ProductInfoTabId} from '~/components/product/ProductInfoModal';
+import type {ColorSiblingSwatch} from '~/lib/color-siblings';
 import {PRODUCT_PAGE} from '~/lib/site-content';
 
 const COLOR_OPTION_NAMES = ['renk', 'color', 'colour'];
 const SIZE_OPTION_NAMES = ['beden', 'size', 'ölçü', 'olcu'];
+const MOBILE_ATC_MQ = '(max-width: 1023px)';
 
 export function ProductForm({
   productOptions,
   selectedVariant,
+  colorSiblings = [],
   onOpenInfo,
 }: {
   productOptions: MappedProductOptions[];
   selectedVariant: ProductFragment['selectedOrFirstAvailableVariant'];
+  colorSiblings?: ColorSiblingSwatch[];
   onOpenInfo?: (tab: ProductInfoTabId) => void;
 }) {
   const navigate = useNavigate();
   const {open} = useAside();
+  const atcSlotRef = useRef<HTMLDivElement>(null);
+  const [atcFixed, setAtcFixed] = useState(true);
+
+  useEffect(() => {
+    const slot = atcSlotRef.current;
+    if (!slot) return;
+
+    const media = window.matchMedia(MOBILE_ATC_MQ);
+
+    const sync = () => {
+      if (!media.matches) {
+        setAtcFixed(false);
+        return;
+      }
+
+      const rect = slot.getBoundingClientRect();
+      const barHeight = 72;
+      // Stay fixed until the natural slot reaches the bottom dock area
+      setAtcFixed(rect.top > window.innerHeight - barHeight);
+    };
+
+    sync();
+    window.addEventListener('scroll', sync, {passive: true});
+    window.addEventListener('resize', sync);
+    media.addEventListener('change', sync);
+
+    return () => {
+      window.removeEventListener('scroll', sync);
+      window.removeEventListener('resize', sync);
+      media.removeEventListener('change', sync);
+    };
+  }, []);
 
   const colorOption = productOptions.find((option) =>
     COLOR_OPTION_NAMES.includes(option.name.trim().toLowerCase()),
@@ -32,8 +68,13 @@ export function ProductForm({
     (option) => option !== colorOption && option !== sizeOption,
   );
 
-  const selectedColorName =
-    colorOption?.optionValues.find((value) => value.selected)?.name ?? '';
+  // Prefer metafield-linked sibling products (separate URLs) over native color variants
+  const useSiblingColors = colorSiblings.length > 1;
+
+  const selectedColorName = useSiblingColors
+    ? (colorSiblings.find((swatch) => swatch.selected)?.colorName ?? '')
+    : (colorOption?.optionValues.find((value) => value.selected)?.name ?? '');
+
   const [hoveredColor, setHoveredColor] = useState<string | null>(null);
   const colorTitle = hoveredColor ?? selectedColorName;
 
@@ -56,9 +97,99 @@ export function ProductForm({
     });
   };
 
+  const addToCartButton = (
+    <AddToCartButton
+      className="product-atc"
+      disabled={!selectedVariant || !selectedVariant.availableForSale}
+      onClick={() => {
+        open('cart');
+      }}
+      lines={
+        selectedVariant
+          ? [
+              {
+                merchandiseId: selectedVariant.id,
+                quantity: 1,
+                selectedVariant,
+              },
+            ]
+          : []
+      }
+    >
+      {selectedVariant?.availableForSale ? 'Sepete ekle' : 'Tükendi'}
+    </AddToCartButton>
+  );
+
   return (
     <div className="product-form">
-      {colorOption && colorOption.optionValues.length > 1 ? (
+      {useSiblingColors ? (
+        <div className="product-colors">
+          <p className="product-colors__title">
+            {colorTitle ? (
+              <>
+                <span className="product-colors__label">Renk:</span>{' '}
+                {colorTitle}
+              </>
+            ) : (
+              'Renk'
+            )}
+          </p>
+          <div className="product-colors__grid">
+            {colorSiblings.map((swatch) => {
+              const className = `product-colors__swatch${
+                swatch.selected ? ' is-selected' : ''
+              }${!swatch.availableForSale ? ' is-unavailable' : ''}`;
+
+              const content = swatch.image ? (
+                <Image
+                  alt={swatch.colorName}
+                  data={swatch.image}
+                  aspectRatio="4/5"
+                  sizes="80px"
+                  className="product-colors__img"
+                />
+              ) : (
+                <span className="product-colors__fallback">
+                  {swatch.colorName}
+                </span>
+              );
+
+              if (swatch.selected) {
+                return (
+                  <span
+                    key={swatch.handle}
+                    className={className}
+                    aria-label={swatch.colorName}
+                    aria-current="true"
+                    onMouseEnter={() => setHoveredColor(swatch.colorName)}
+                    onMouseLeave={() => setHoveredColor(null)}
+                  >
+                    {content}
+                  </span>
+                );
+              }
+
+              return (
+                <Link
+                  key={swatch.handle}
+                  to={`/products/${swatch.handle}`}
+                  prefetch="intent"
+                  preventScrollReset
+                  replace
+                  className={className}
+                  aria-label={swatch.colorName}
+                  onMouseEnter={() => setHoveredColor(swatch.colorName)}
+                  onMouseLeave={() => setHoveredColor(null)}
+                  onFocus={() => setHoveredColor(swatch.colorName)}
+                  onBlur={() => setHoveredColor(null)}
+                >
+                  {content}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      ) : colorOption && colorOption.optionValues.length > 1 ? (
         <div className="product-colors">
           <p className="product-colors__title">
             {colorTitle ? (
@@ -170,6 +301,13 @@ export function ProductForm({
       ) : null}
 
       {otherOptions.map((option) => {
+        // When using sibling colors, skip a native Color option to avoid duplicates
+        if (
+          useSiblingColors &&
+          COLOR_OPTION_NAMES.includes(option.name.trim().toLowerCase())
+        ) {
+          return null;
+        }
         if (option.optionValues.length <= 1) return null;
 
         return (
@@ -194,26 +332,11 @@ export function ProductForm({
         );
       })}
 
-      <AddToCartButton
-        className="product-atc"
-        disabled={!selectedVariant || !selectedVariant.availableForSale}
-        onClick={() => {
-          open('cart');
-        }}
-        lines={
-          selectedVariant
-            ? [
-                {
-                  merchandiseId: selectedVariant.id,
-                  quantity: 1,
-                  selectedVariant,
-                },
-              ]
-            : []
-        }
-      >
-        {selectedVariant?.availableForSale ? 'Sepete ekle' : 'Tükendi'}
-      </AddToCartButton>
+      <div ref={atcSlotRef} className="product-atc-slot">
+        <div className={`product-atc-bar${atcFixed ? ' is-fixed' : ''}`}>
+          {addToCartButton}
+        </div>
+      </div>
 
       <p className="product-shipping-note">{PRODUCT_PAGE.freeShippingNote}</p>
     </div>

@@ -2772,12 +2772,14 @@ button.reset:hover:not(:has(> *)) {
 
 .product-gallery {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 4px;
 }
 
 .product-gallery--grid {
-  display: none;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
 }
 
 .product-gallery--fallback {
@@ -2817,11 +2819,15 @@ button.reset:hover:not(:has(> *)) {
 
 .product-gallery-splide .splide__list {
   display: flex;
+  flex-wrap: nowrap;
   align-items: stretch;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 .product-gallery-splide .splide__slide {
-  min-width: 0;
+  flex-shrink: 0;
+  list-style: none;
 }
 
 .product-gallery-splide .splide__pagination {
@@ -3084,6 +3090,27 @@ button.reset:hover:not(:has(> *)) {
   cursor: not-allowed;
 }
 
+.product-atc-slot {
+  min-height: 2.75rem;
+}
+
+.product-atc-bar {
+  width: 100%;
+}
+
+.product-atc-bar.is-fixed {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  width: 100%;
+  padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
+  background: #fff;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.06);
+}
+
 .product-atc {
   width: 100%;
   height: 2.75rem;
@@ -3320,6 +3347,12 @@ button.reset:hover:not(:has(> *)) {
   color: #666;
 }
 
+@media (min-width: 768px) and (max-width: 1023px) {
+  .product-gallery--fallback {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (min-width: 1024px) {
   .product-page {
     padding-bottom: 4rem;
@@ -3334,15 +3367,6 @@ button.reset:hover:not(:has(> *)) {
 
   .product-page__gallery {
     grid-column: span 16;
-  }
-
-  .product-gallery--grid {
-    display: grid;
-    gap: 8px;
-  }
-
-  .product-gallery-slider {
-    display: none;
   }
 
   .product-page__info {
@@ -3384,6 +3408,18 @@ button.reset:hover:not(:has(> *)) {
     min-width: 3rem;
     height: 30px;
     padding: 0 8px;
+  }
+
+  .product-atc-slot {
+    min-height: 40px;
+  }
+
+  .product-atc-bar.is-fixed {
+    position: static;
+    padding: 0;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
   }
 
   .product-atc {

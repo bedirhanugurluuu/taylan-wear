@@ -21,6 +21,7 @@ import {RelatedProducts} from '~/components/product/RelatedProducts';
 import {IconHeart} from '~/components/icons/HeaderIcons';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
 import {PRODUCT_PAGE} from '~/lib/site-content';
+import {getColorSiblingSwatches} from '~/lib/color-siblings';
 
 export const meta: Route.MetaFunction = ({data}) => {
   return [
@@ -190,6 +191,7 @@ export default function Product() {
           <ProductForm
             productOptions={productOptions}
             selectedVariant={selectedVariant}
+            colorSiblings={getColorSiblingSwatches(product)}
             onOpenInfo={openInfo}
           />
 
@@ -297,6 +299,50 @@ const PRODUCT_FRAGMENT = `#graphql
     }
     fit: metafield(namespace: "custom", key: "fit") {
       value
+    }
+    colorName: metafield(namespace: "custom", key: "color_name") {
+      value
+    }
+    colorSiblings: metafield(namespace: "custom", key: "color_siblings") {
+      type
+      reference {
+        ... on Product {
+          id
+          handle
+          title
+          availableForSale
+          featuredImage {
+            id
+            url
+            altText
+            width
+            height
+          }
+          colorName: metafield(namespace: "custom", key: "color_name") {
+            value
+          }
+        }
+      }
+      references(first: 20) {
+        nodes {
+          ... on Product {
+            id
+            handle
+            title
+            availableForSale
+            featuredImage {
+              id
+              url
+              altText
+              width
+              height
+            }
+            colorName: metafield(namespace: "custom", key: "color_name") {
+              value
+            }
+          }
+        }
+      }
     }
     options {
       name
