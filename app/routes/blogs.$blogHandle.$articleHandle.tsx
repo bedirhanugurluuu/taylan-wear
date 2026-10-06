@@ -4,7 +4,7 @@ import {Image} from '@shopify/hydrogen';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
 
 export const meta: Route.MetaFunction = ({data}) => {
-  return [{title: `Hydrogen | ${data?.article.title ?? ''} article`}];
+  return [{title: `Taylan Wear | ${data?.article.title ?? 'Yazı'}`}];
 };
 
 export async function loader(args: Route.LoaderArgs) {
@@ -25,7 +25,7 @@ async function loadCriticalData({context, request, params}: Route.LoaderArgs) {
   const {blogHandle, articleHandle} = params;
 
   if (!articleHandle || !blogHandle) {
-    throw new Response('Not found', {status: 404});
+    throw new Response('Yazı bulunamadı', {status: 404});
   }
 
   const [{blog}] = await Promise.all([
@@ -69,7 +69,7 @@ export default function Article() {
   const {article} = useLoaderData<typeof loader>();
   const {title, image, contentHtml, author} = article;
 
-  const publishedDate = new Intl.DateTimeFormat('en-US', {
+  const publishedDate = new Intl.DateTimeFormat('tr-TR', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',

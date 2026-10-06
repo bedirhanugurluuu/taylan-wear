@@ -19,6 +19,8 @@ import {
   ProductRail,
 } from '~/components/product/ProductRail';
 import type {ProductCardProduct} from '~/components/product/ProductCard';
+import {WishlistAsideContent} from '~/components/Wishlist';
+import {WishlistProvider} from '~/components/WishlistProvider';
 
 type FeaturedProductsPromise = Promise<{
   products: {nodes: ProductCardProduct[]};
@@ -42,24 +44,35 @@ export function PageLayout({
   featuredProducts,
 }: PageLayoutProps) {
   return (
-    <Aside.Provider>
-      <CartAside cart={cart} featuredProducts={featuredProducts} />
-      <SearchAside featuredProducts={featuredProducts} />
-      <MobileMenuAside header={header} publicStoreDomain={publicStoreDomain} />
-      <div className="site-header">
-        <TopBar />
-        {header ? (
-          <Header
-            header={header}
-            cart={cart}
-            isLoggedIn={isLoggedIn}
-            publicStoreDomain={publicStoreDomain}
-          />
-        ) : null}
-      </div>
-      <main>{children}</main>
-      <Footer />
-    </Aside.Provider>
+    <WishlistProvider>
+      <Aside.Provider>
+        <CartAside cart={cart} featuredProducts={featuredProducts} />
+        <WishlistAside />
+        <SearchAside featuredProducts={featuredProducts} />
+        <MobileMenuAside header={header} publicStoreDomain={publicStoreDomain} />
+        <div className="site-header">
+          <TopBar />
+          {header ? (
+            <Header
+              header={header}
+              cart={cart}
+              isLoggedIn={isLoggedIn}
+              publicStoreDomain={publicStoreDomain}
+            />
+          ) : null}
+        </div>
+        <main>{children}</main>
+        <Footer />
+      </Aside.Provider>
+    </WishlistProvider>
+  );
+}
+
+function WishlistAside() {
+  return (
+    <Aside type="wishlist" heading="Favoriler">
+      <WishlistAsideContent />
+    </Aside>
   );
 }
 

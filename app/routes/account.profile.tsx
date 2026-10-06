@@ -16,7 +16,7 @@ export type ActionResponse = {
 };
 
 export const meta: Route.MetaFunction = () => {
-  return [{title: 'Profile'}];
+  return [{title: 'Taylan Wear | Profil'}];
 };
 
 export async function loader({context}: Route.LoaderArgs) {
@@ -46,7 +46,6 @@ export async function action({request, context}: Route.ActionArgs) {
       }
     }
 
-    // update customer and possibly password
     const {data, errors} = await customerAccount.mutate(
       CUSTOMER_UPDATE_MUTATION,
       {
@@ -62,7 +61,7 @@ export async function action({request, context}: Route.ActionArgs) {
     }
 
     if (!data?.customerUpdate?.customer) {
-      throw new Error('Customer profile update failed.');
+      throw new Error('Profil güncellenemedi.');
     }
 
     return {
@@ -87,45 +86,46 @@ export default function AccountProfile() {
 
   return (
     <div className="account-profile">
-      <h2>My profile</h2>
-      <br />
-      <Form method="PUT">
-        <legend>Personal information</legend>
-        <fieldset>
-          <label htmlFor="firstName">First name</label>
-          <input
-            id="firstName"
-            name="firstName"
-            type="text"
-            autoComplete="given-name"
-            placeholder="First name"
-            aria-label="First name"
-            defaultValue={customer.firstName ?? ''}
-            minLength={2}
-          />
-          <label htmlFor="lastName">Last name</label>
-          <input
-            id="lastName"
-            name="lastName"
-            type="text"
-            autoComplete="family-name"
-            placeholder="Last name"
-            aria-label="Last name"
-            defaultValue={customer.lastName ?? ''}
-            minLength={2}
-          />
+      <h2 className="account-section__title">Profilim</h2>
+      <Form method="PUT" className="account-form">
+        <fieldset className="account-form__fieldset">
+          <legend className="account-form__legend">Kişisel bilgiler</legend>
+          <div className="account-form__grid">
+            <label className="account-field" htmlFor="firstName">
+              <span>Ad</span>
+              <input
+                id="firstName"
+                name="firstName"
+                type="text"
+                autoComplete="given-name"
+                placeholder="Adınız"
+                aria-label="Ad"
+                defaultValue={customer.firstName ?? ''}
+                minLength={2}
+              />
+            </label>
+            <label className="account-field" htmlFor="lastName">
+              <span>Soyad</span>
+              <input
+                id="lastName"
+                name="lastName"
+                type="text"
+                autoComplete="family-name"
+                placeholder="Soyadınız"
+                aria-label="Soyad"
+                defaultValue={customer.lastName ?? ''}
+                minLength={2}
+              />
+            </label>
+          </div>
         </fieldset>
         {action?.error ? (
-          <p>
-            <mark>
-              <small>{action.error}</small>
-            </mark>
+          <p className="account-form__error" role="alert">
+            {action.error}
           </p>
-        ) : (
-          <br />
-        )}
-        <button type="submit" disabled={state !== 'idle'}>
-          {state !== 'idle' ? 'Updating' : 'Update'}
+        ) : null}
+        <button type="submit" className="account-btn" disabled={state !== 'idle'}>
+          {state !== 'idle' ? 'Kaydediliyor…' : 'Kaydet'}
         </button>
       </Form>
     </div>

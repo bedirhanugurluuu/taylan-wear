@@ -54,7 +54,7 @@ async function loadCriticalData({context, params, request}: Route.LoaderArgs) {
   });
 
   if (!collection) {
-    throw new Response(`Collection ${handle} not found`, {
+    throw new Response(`Koleksiyon bulunamadı: ${handle}`, {
       status: 404,
     });
   }

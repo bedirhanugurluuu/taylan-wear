@@ -30,7 +30,7 @@ type OrdersLoaderData = {
 };
 
 export const meta: Route.MetaFunction = () => {
-  return [{title: 'Orders'}];
+  return [{title: 'Taylan Wear | Siparişlerim'}];
 };
 
 export async function loader({request, context}: Route.LoaderArgs) {
@@ -52,7 +52,7 @@ export async function loader({request, context}: Route.LoaderArgs) {
   });
 
   if (errors?.length || !data?.customer) {
-    throw Error('Customer orders not found');
+    throw Error('Siparişler bulunamadı');
   }
 
   return {customer: data.customer, filters};
@@ -63,7 +63,8 @@ export default function Orders() {
   const {orders} = customer;
 
   return (
-    <div className="orders">
+    <div className="account-orders">
+      <h2 className="account-section__title">Siparişlerim</h2>
       <OrderSearchForm currentFilters={filters} />
       <OrdersTable orders={orders} filters={filters} />
     </div>
@@ -80,7 +81,7 @@ function OrdersTable({
   const hasFilters = !!(filters.name || filters.confirmationNumber);
 
   return (
-    <div className="acccount-orders" aria-live="polite">
+    <div className="account-orders__list" aria-live="polite">
       {orders?.nodes.length ? (
         <PaginatedResourceSection connection={orders}>
           {({node: order}) => <OrderItem key={order.id} order={order} />}
@@ -94,22 +95,25 @@ function OrdersTable({
 
 function EmptyOrders({hasFilters = false}: {hasFilters?: boolean}) {
   return (
-    <div>
+    <div className="account-empty">
       {hasFilters ? (
         <>
-          <p>No orders found matching your search.</p>
-          <br />
-          <p>
-            <Link to="/account/orders">Clear filters →</Link>
+          <p className="account-empty__text">
+            Aramanıza uygun sipariş bulunamadı.
           </p>
+          <Link to="/account/orders" className="account-btn account-btn--ghost">
+            Filtreleri temizle
+          </Link>
         </>
       ) : (
         <>
-          <p>You haven&apos;t placed any orders yet.</p>
-          <br />
-          <p>
-            <Link to="/collections">Start Shopping →</Link>
+          <p className="account-empty__text">Henüz sipariş vermediniz.</p>
+          <p className="account-empty__hint">
+            Koleksiyonumuza göz atarak alışverişe başlayabilirsiniz.
           </p>
+          <Link to="/collections/all" className="account-btn">
+            Alışverişe başla
+          </Link>
         </>
       )}
     </div>
@@ -121,7 +125,7 @@ function OrderSearchForm({
 }: {
   currentFilters: OrderFilterParams;
 }) {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [, setSearchParams] = useSearchParams();
   const navigation = useNavigation();
   const isSearching =
     navigation.state !== 'idle' &&
@@ -153,44 +157,45 @@ function OrderSearchForm({
       ref={formRef}
       onSubmit={handleSubmit}
       className="order-search-form"
-      aria-label="Search orders"
+      aria-label="Sipariş ara"
     >
       <fieldset className="order-search-fieldset">
-        <legend className="order-search-legend">Filter Orders</legend>
+        <legend className="order-search-legend">Sipariş filtrele</legend>
 
         <div className="order-search-inputs">
           <input
             type="search"
             name={ORDER_FILTER_FIELDS.NAME}
-            placeholder="Order #"
-            aria-label="Order number"
+            placeholder="Sipariş no"
+            aria-label="Sipariş numarası"
             defaultValue={currentFilters.name || ''}
             className="order-search-input"
           />
           <input
             type="search"
             name={ORDER_FILTER_FIELDS.CONFIRMATION_NUMBER}
-            placeholder="Confirmation #"
-            aria-label="Confirmation number"
+            placeholder="Onay no"
+            aria-label="Onay numarası"
             defaultValue={currentFilters.confirmationNumber || ''}
             className="order-search-input"
           />
         </div>
 
         <div className="order-search-buttons">
-          <button type="submit" disabled={isSearching}>
-            {isSearching ? 'Searching' : 'Search'}
+          <button type="submit" className="account-btn" disabled={isSearching}>
+            {isSearching ? 'Aranıyor…' : 'Ara'}
           </button>
           {hasFilters && (
             <button
               type="button"
+              className="account-btn account-btn--ghost"
               disabled={isSearching}
               onClick={() => {
                 setSearchParams(new URLSearchParams());
                 formRef.current?.reset();
               }}
             >
-              Clear
+              Temizle
             </button>
           )}
         </div>
@@ -199,24 +204,50 @@ function OrderSearchForm({
   );
 }
 
+function formatOrderDate(value: string) {
+  return new Date(value).toLocaleDateString('tr-TR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+}
+
 function OrderItem({order}: {order: OrderItemFragment}) {
   const fulfillmentStatus = flattenConnection(order.fulfillments)[0]?.status;
+
   return (
-    <>
-      <fieldset>
-        <Link to={`/account/orders/${btoa(order.id)}`}>
-          <strong>#{order.number}</strong>
+    <article className="account-order-card">
+      <div className="account-order-card__main">
+        <Link
+          to={`/account/orders/${btoa(order.id)}`}
+          className="account-order-card__number"
+        >
+          #{order.number}
         </Link>
-        <p>{new Date(order.processedAt).toDateString()}</p>
-        {order.confirmationNumber && (
-          <p>Confirmation: {order.confirmationNumber}</p>
-        )}
-        <p>{order.financialStatus}</p>
-        {fulfillmentStatus && <p>{fulfillmentStatus}</p>}
-        <Money data={order.totalPrice} />
-        <Link to={`/account/orders/${btoa(order.id)}`}>View Order →</Link>
-      </fieldset>
-      <br />
-    </>
+        <p className="account-order-card__date">
+          {formatOrderDate(order.processedAt)}
+        </p>
+        {order.confirmationNumber ? (
+          <p className="account-order-card__meta">
+            Onay: {order.confirmationNumber}
+          </p>
+        ) : null}
+        <div className="account-order-card__status">
+          {order.financialStatus ? <span>{order.financialStatus}</span> : null}
+          {fulfillmentStatus ? <span>{fulfillmentStatus}</span> : null}
+        </div>
+      </div>
+      <div className="account-order-card__aside">
+        <p className="account-order-card__total">
+          <Money data={order.totalPrice} />
+        </p>
+        <Link
+          to={`/account/orders/${btoa(order.id)}`}
+          className="account-order-card__link"
+        >
+          Detayları gör
+        </Link>
+      </div>
+    </article>
   );
 }

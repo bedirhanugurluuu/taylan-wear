@@ -49,7 +49,7 @@ export async function loader({request, context, params}: Route.LoaderArgs) {
   const cartResult = result.cart;
 
   if (result.errors?.length || !cartResult) {
-    throw new Response('Link may be expired. Try checking the URL.', {
+    throw new Response('Bağlantının süresi dolmuş olabilir. URL’yi kontrol edin.', {
       status: 410,
     });
   }

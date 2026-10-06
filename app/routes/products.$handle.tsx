@@ -18,7 +18,7 @@ import {
   type ProductInfoTabId,
 } from '~/components/product/ProductInfoModal';
 import {RelatedProducts} from '~/components/product/RelatedProducts';
-import {IconHeart} from '~/components/icons/HeaderIcons';
+import {WishlistToggleButton} from '~/components/Wishlist';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
 import {PRODUCT_PAGE} from '~/lib/site-content';
 import {getColorSiblingSwatches} from '~/lib/color-siblings';
@@ -172,13 +172,22 @@ export default function Product() {
 
           <div className="product-page__heading">
             <h1 className="product-page__title">{title}</h1>
-            <button
-              type="button"
+            <WishlistToggleButton
               className="product-page__wishlist"
-              aria-label="Favorilere ekle"
-            >
-              <IconHeart size={22} />
-            </button>
+              size={18}
+              product={{
+                id: product.id,
+                handle: product.handle,
+                title: product.title,
+                image: galleryImages[0]
+                  ? {
+                      url: galleryImages[0].url,
+                      altText: galleryImages[0].altText,
+                    }
+                  : null,
+                price: selectedVariant?.price ?? null,
+              }}
+            />
           </div>
 
           <div className="product-page__price">

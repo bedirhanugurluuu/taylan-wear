@@ -13,7 +13,7 @@ export const meta: Route.MetaFunction = ({data}) => {
 
 export async function loader({params, context}: Route.LoaderArgs) {
   if (!params.handle) {
-    throw new Response('No handle was passed in', {status: 404});
+    throw new Response('Politika belirtilmedi', {status: 404});
   }
 
   const policyName = params.handle.replace(
@@ -35,7 +35,7 @@ export async function loader({params, context}: Route.LoaderArgs) {
   const policy = data.shop?.[policyName];
 
   if (!policy) {
-    throw new Response('Could not find the policy', {status: 404});
+    throw new Response('Politika bulunamadı', {status: 404});
   }
 
   return {policy};

@@ -95,15 +95,15 @@ export const HOME_DEPARTMENTS = [
     text: 'Zamansız kesimler ve günlük gardırobun temel parçaları.',
     href: '/collections/klasik',
     image:
-      'https://images.unsplash.com/photo-1488161628813-04466f872be2?auto=format&fit=crop&w=1200&q=80',
+      '/hero-2.jpg',
     alt: 'Klasik koleksiyon',
   },
   {
-    title: 'Spor Giyim',
+    title: 'Rahat Giyim',
     text: 'Hareket özgürlüğü sunan, şehir temposuna uygun parçalar.',
     href: '/collections/spor-giyim',
     image:
-      'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1200&q=80',
+      '/hero-3.jpg',
     alt: 'Spor giyim koleksiyonu',
   },
 ] as const;
@@ -152,9 +152,9 @@ export const FOOTER = {
     ],
   },
   newsletter: {
-    title: 'Newsletter',
+    title: 'Bülten',
     text: 'Yeni sezon ve kampanyalardan ilk sen haberdar ol.',
-    placeholder: 'E-mail adresiniz',
+    placeholder: 'E-posta adresiniz',
   },
   contact: {
     address: 'İstanbul, Türkiye',
@@ -176,11 +176,11 @@ export const FOOTER = {
 export const HOME_HERO = {
   /** Replace with `/hero.jpg` when you add a file to /public */
   image: {
-    src: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=2400&q=80',
+    src: '/hero.jpg',
     alt: 'Taylan Wear — yaz koleksiyonu',
   },
-  title: 'Yazın taze girişi',
-  text: 'Hafif kumaşlar, sade kesimler ve günlük ritmine uyan parçalar.',
+  title: 'Ceketler & Dış Giyim',
+  text: 'Sezonun favorileri, sade kesimler ve günlük ritmine uyan parçalar.',
   cta: {
     label: 'Alışverişe başla',
     href: '/collections/all',

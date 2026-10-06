@@ -19,7 +19,7 @@ export async function loader({context}: Route.LoaderArgs) {
   ].filter((policy): policy is PolicyItemFragment => policy != null);
 
   if (!policies.length) {
-    throw new Response('No policies found', {status: 404});
+    throw new Response('Politika bulunamadı', {status: 404});
   }
 
   return {policies};

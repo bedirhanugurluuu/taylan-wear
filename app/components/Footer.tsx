@@ -42,7 +42,7 @@ export function Footer() {
 
           <form className="footer__form" onSubmit={onNewsletterSubmit}>
             <label className="sr-only" htmlFor="footer-email">
-              E-mail
+              E-posta
             </label>
             <input
               id="footer-email"

@@ -40,6 +40,7 @@ export default defineConfig({
     },
   },
   server: {
-    allowedHosts: ['.tryhydrogen.dev'],
+    // Tunnel may present as *.tryhydrogen.dev or underlying *.trycloudflare.com
+    allowedHosts: ['.tryhydrogen.dev', '.trycloudflare.com'],
   },
 });

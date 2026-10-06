@@ -12,6 +12,10 @@ export function shouldRevalidate() {
   return true;
 }
 
+export const meta: Route.MetaFunction = () => {
+  return [{title: 'Taylan Wear | Hesabım'}];
+};
+
 export async function loader({context}: Route.LoaderArgs) {
   const {customerAccount} = context;
   const {data, errors} = await customerAccount.query(CUSTOMER_DETAILS_QUERY, {
@@ -21,7 +25,7 @@ export async function loader({context}: Route.LoaderArgs) {
   });
 
   if (errors?.length || !data?.customer) {
-    throw new Error('Customer not found');
+    throw new Error('Müşteri bulunamadı');
   }
 
   return remixData(
@@ -37,52 +41,51 @@ export async function loader({context}: Route.LoaderArgs) {
 export default function AccountLayout() {
   const {customer} = useLoaderData<typeof loader>();
 
-  const heading = customer
-    ? customer.firstName
-      ? `Welcome, ${customer.firstName}`
-      : `Welcome to your account.`
-    : 'Account Details';
+  const heading = customer?.firstName
+    ? `Merhaba, ${customer.firstName}`
+    : 'Hesabım';
 
   return (
     <div className="account">
-      <h1>{heading}</h1>
-      <br />
+      <div className="account__header">
+        <p className="account__eyebrow">Hesap</p>
+        <h1 className="account__title">{heading}</h1>
+      </div>
       <AccountMenu />
-      <br />
-      <br />
-      <Outlet context={{customer}} />
+      <div className="account__content">
+        <Outlet context={{customer}} />
+      </div>
     </div>
   );
 }
 
 function AccountMenu() {
-  function isActiveStyle({
-    isActive,
-    isPending,
-  }: {
-    isActive: boolean;
-    isPending: boolean;
-  }) {
-    return {
-      fontWeight: isActive ? 'bold' : undefined,
-      color: isPending ? 'grey' : 'black',
-    };
-  }
-
   return (
-    <nav role="navigation">
-      <NavLink to="/account/orders" style={isActiveStyle}>
-        Orders &nbsp;
+    <nav className="account-nav" aria-label="Hesap menüsü">
+      <NavLink
+        to="/account/orders"
+        className={({isActive}) =>
+          `account-nav__link${isActive ? ' is-active' : ''}`
+        }
+      >
+        Siparişler
       </NavLink>
-      &nbsp;|&nbsp;
-      <NavLink to="/account/profile" style={isActiveStyle}>
-        &nbsp; Profile &nbsp;
+      <NavLink
+        to="/account/profile"
+        className={({isActive}) =>
+          `account-nav__link${isActive ? ' is-active' : ''}`
+        }
+      >
+        Profil
       </NavLink>
-      &nbsp;|&nbsp;
-      <NavLink to="/account/addresses" style={isActiveStyle}>
-        &nbsp; Addresses &nbsp;
+      <NavLink
+        to="/account/addresses"
+        className={({isActive}) =>
+          `account-nav__link${isActive ? ' is-active' : ''}`
+        }
+      >
+        Adresler
       </NavLink>
-      &nbsp;|&nbsp;
       <Logout />
     </nav>
   );
@@ -91,7 +94,9 @@ function AccountMenu() {
 function Logout() {
   return (
     <Form className="account-logout" method="POST" action="/account/logout">
-      &nbsp;<button type="submit">Sign out</button>
+      <button type="submit" className="account-nav__link account-nav__logout">
+        Çıkış yap
+      </button>
     </Form>
   );
 }

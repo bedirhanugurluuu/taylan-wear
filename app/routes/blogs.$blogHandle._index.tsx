@@ -6,7 +6,7 @@ import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
 
 export const meta: Route.MetaFunction = ({data}) => {
-  return [{title: `Hydrogen | ${data?.blog.title ?? ''} blog`}];
+  return [{title: `Taylan Wear | ${data?.blog.title ?? 'Blog'}`}];
 };
 
 export async function loader(args: Route.LoaderArgs) {
@@ -29,7 +29,7 @@ async function loadCriticalData({context, request, params}: Route.LoaderArgs) {
   });
 
   if (!params.blogHandle) {
-    throw new Response(`blog not found`, {status: 404});
+    throw new Response('Blog bulunamadı', {status: 404});
   }
 
   const [{blog}] = await Promise.all([
@@ -43,7 +43,7 @@ async function loadCriticalData({context, request, params}: Route.LoaderArgs) {
   ]);
 
   if (!blog?.articles) {
-    throw new Response('Not found', {status: 404});
+    throw new Response('Blog bulunamadı', {status: 404});
   }
 
   redirectIfHandleIsLocalized(request, {handle: params.blogHandle, data: blog});
@@ -89,7 +89,7 @@ function ArticleItem({
   article: ArticleItemFragment;
   loading?: HTMLImageElement['loading'];
 }) {
-  const publishedAt = new Intl.DateTimeFormat('en-US', {
+  const publishedAt = new Intl.DateTimeFormat('tr-TR', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',

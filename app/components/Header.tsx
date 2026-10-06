@@ -14,11 +14,11 @@ import type {HeaderQuery, CartApiQueryFragment} from 'storefrontapi.generated';
 import {useAside} from '~/components/Aside';
 import {
   IconCart,
-  IconHeart,
   IconMenu,
   IconSearch,
   IconUser,
 } from '~/components/icons/HeaderIcons';
+import {HeaderWishlistButton} from '~/components/Wishlist';
 
 interface HeaderProps {
   header: HeaderQuery;
@@ -149,8 +149,8 @@ function HeaderCtas({
   return (
     <nav className="header__actions" aria-label="Hesap ve sepet">
       <SearchToggle />
+      <HeaderWishlistButton />
       <CartToggle cart={cart} />
-      <WishlistButton />
       <AccountLink isLoggedIn={isLoggedIn} />
       <HeaderMenuMobileToggle />
     </nav>
@@ -181,19 +181,6 @@ function SearchToggle() {
       aria-label="Ara"
     >
       <IconSearch />
-    </button>
-  );
-}
-
-function WishlistButton() {
-  return (
-    <button
-      type="button"
-      className="header__icon-btn reset"
-      aria-label="Kaydedilenler"
-      title="Yakında"
-    >
-      <IconHeart />
     </button>
   );
 }
@@ -263,7 +250,7 @@ const FALLBACK_HEADER_MENU = {
       id: 'gid://shopify/MenuItem/461609500728',
       resourceId: null,
       tags: [],
-      title: 'Collections',
+      title: 'Koleksiyonlar',
       type: 'HTTP',
       url: '/collections',
       items: [],
@@ -281,7 +268,7 @@ const FALLBACK_HEADER_MENU = {
       id: 'gid://shopify/MenuItem/461609566264',
       resourceId: null,
       tags: [],
-      title: 'Policies',
+      title: 'Politikalar',
       type: 'HTTP',
       url: '/policies',
       items: [],
@@ -290,7 +277,7 @@ const FALLBACK_HEADER_MENU = {
       id: 'gid://shopify/MenuItem/461609599032',
       resourceId: 'gid://shopify/Page/92591030328',
       tags: [],
-      title: 'About',
+      title: 'Hakkımızda',
       type: 'PAGE',
       url: '/pages/about',
       items: [],

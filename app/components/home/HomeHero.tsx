@@ -5,7 +5,7 @@ export function HomeHero() {
   const {image, title, text, cta} = HOME_HERO;
 
   return (
-    <section className="home-hero" aria-label="Hero">
+    <section className="home-hero" aria-label="Öne çıkan">
       <div className="home-hero__media">
         <img
           className="home-hero__image"

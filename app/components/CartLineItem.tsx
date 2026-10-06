@@ -5,6 +5,7 @@ import {useVariantUrl} from '~/lib/variants';
 import {Link} from 'react-router';
 import {ProductPrice} from './ProductPrice';
 import {useAside} from './Aside';
+import {useWishlist} from '~/components/WishlistProvider';
 import type {CartApiQueryFragment} from 'storefrontapi.generated';
 
 export type CartLine = OptimisticCartLine<CartApiQueryFragment>;
@@ -95,15 +96,13 @@ export function CartLineItem({
             )}
 
             <div className="cart-line__actions">
-              <button
-                type="button"
-                className="cart-line__wishlist"
-                onClick={(event) => {
-                  event.preventDefault();
-                }}
-              >
-                Favorilere ekle
-              </button>
+              <CartWishlistButton
+                productId={product.id}
+                handle={product.handle}
+                title={product.title}
+                image={image}
+                price={unitPrice}
+              />
               <CartLineRemoveButton
                 lineIds={[id]}
                 disabled={!!line.isOptimistic}
@@ -198,6 +197,46 @@ export function CartLineItem({
         </div>
       ) : null}
     </li>
+  );
+}
+
+function CartWishlistButton({
+  productId,
+  handle,
+  title,
+  image,
+  price,
+}: {
+  productId: string;
+  handle: string;
+  title: string;
+  image?: CartLine['merchandise']['image'];
+  price?: CartLine['cost']['amountPerQuantity'];
+}) {
+  const {has, toggle, ready} = useWishlist();
+  const saved = ready && has(productId);
+
+  return (
+    <button
+      type="button"
+      className={`cart-line__wishlist${saved ? ' is-saved' : ''}`}
+      disabled={!ready}
+      onClick={() =>
+        toggle({
+          id: productId,
+          handle,
+          title,
+          image: image
+            ? {url: image.url, altText: image.altText}
+            : null,
+          price: price
+            ? {amount: price.amount, currencyCode: price.currencyCode}
+            : null,
+        })
+      }
+    >
+      {saved ? 'Favorilerden çıkar' : 'Favorilere ekle'}
+    </button>
   );
 }
 

@@ -1,7 +1,7 @@
 import {Link} from 'react-router';
 import {Image, Money} from '@shopify/hydrogen';
 import type {MoneyV2} from '@shopify/hydrogen/storefront-api-types';
-import {IconHeart} from '~/components/icons/HeaderIcons';
+import {WishlistToggleButton} from '~/components/Wishlist';
 
 const NEW_TAGS = ['yeni', 'new'];
 const COLOR_OPTION_NAMES = ['renk', 'color', 'colour'];
@@ -105,18 +105,20 @@ export function ProductCard({
 
         {isNew ? <span className="product-card__badge">Yeni</span> : null}
 
-        <button
-          type="button"
+        <WishlistToggleButton
           className="product-card__save"
-          aria-label="Kaydet"
-          title="Yakında"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
+          size={14}
+          stopPropagation
+          product={{
+            id: product.id,
+            handle: product.handle,
+            title: product.title,
+            image: primaryImage
+              ? {url: primaryImage.url, altText: primaryImage.altText}
+              : null,
+            price: product.priceRange.minVariantPrice,
           }}
-        >
-          <IconHeart size={16} />
-        </button>
+        />
       </div>
 
       <div className="product-card__info">

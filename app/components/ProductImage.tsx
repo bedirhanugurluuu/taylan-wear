@@ -12,7 +12,7 @@ export function ProductImage({
   return (
     <div className="product-image">
       <Image
-        alt={image.altText || 'Product Image'}
+        alt={image.altText || 'Ürün görseli'}
         aspectRatio="1/1"
         data={image}
         key={image.id}

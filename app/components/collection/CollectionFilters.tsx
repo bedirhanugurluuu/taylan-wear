@@ -240,7 +240,7 @@ function PriceFilter({
           type="number"
           inputMode="numeric"
           min="0"
-          placeholder="Min"
+          placeholder="Min."
           value={min}
           onChange={(e) => setMin(e.target.value)}
           aria-label="Minimum fiyat"
@@ -250,7 +250,7 @@ function PriceFilter({
           type="number"
           inputMode="numeric"
           min="0"
-          placeholder="Max"
+          placeholder="Maks."
           value={max}
           onChange={(e) => setMax(e.target.value)}
           aria-label="Maksimum fiyat"

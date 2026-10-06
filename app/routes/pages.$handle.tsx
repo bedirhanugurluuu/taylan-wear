@@ -35,7 +35,7 @@ async function loadCriticalData({context, request, params}: Route.LoaderArgs) {
   ]);
 
   if (!page) {
-    throw new Response('Not Found', {status: 404});
+    throw new Response('Sayfa bulunamadı', {status: 404});
   }
 
   redirectIfHandleIsLocalized(request, {handle: params.handle, data: page});

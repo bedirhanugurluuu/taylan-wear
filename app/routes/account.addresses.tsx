@@ -28,7 +28,7 @@ export type ActionResponse = {
 };
 
 export const meta: Route.MetaFunction = () => {
-  return [{title: 'Addresses'}];
+  return [{title: 'Taylan Wear | Adreslerim'}];
 };
 
 export async function loader({context}: Route.LoaderArgs) {
@@ -47,14 +47,13 @@ export async function action({request, context}: Route.ActionArgs) {
       ? String(form.get('addressId'))
       : null;
     if (!addressId) {
-      throw new Error('You must provide an address id.');
+      throw new Error('Adres kimliği gerekli.');
     }
 
-    // this will ensure redirecting to login never happen for mutatation
     const isLoggedIn = await customerAccount.isLoggedIn();
     if (!isLoggedIn) {
       return data(
-        {error: {[addressId]: 'Unauthorized'}},
+        {error: {[addressId]: 'Oturum açmanız gerekiyor.'}},
         {
           status: 401,
         },
@@ -87,7 +86,6 @@ export async function action({request, context}: Route.ActionArgs) {
 
     switch (request.method) {
       case 'POST': {
-        // handle new address creation
         try {
           const {data, errors} = await customerAccount.mutate(
             CREATE_ADDRESS_MUTATION,
@@ -109,7 +107,7 @@ export async function action({request, context}: Route.ActionArgs) {
           }
 
           if (!data?.customerAddressCreate?.customerAddress) {
-            throw new Error('Customer address create failed.');
+            throw new Error('Adres oluşturulamadı.');
           }
 
           return {
@@ -136,7 +134,6 @@ export async function action({request, context}: Route.ActionArgs) {
       }
 
       case 'PUT': {
-        // handle address updates
         try {
           const {data, errors} = await customerAccount.mutate(
             UPDATE_ADDRESS_MUTATION,
@@ -159,7 +156,7 @@ export async function action({request, context}: Route.ActionArgs) {
           }
 
           if (!data?.customerAddressUpdate?.customerAddress) {
-            throw new Error('Customer address update failed.');
+            throw new Error('Adres güncellenemedi.');
           }
 
           return {
@@ -186,7 +183,6 @@ export async function action({request, context}: Route.ActionArgs) {
       }
 
       case 'DELETE': {
-        // handles address deletion
         try {
           const {data, errors} = await customerAccount.mutate(
             DELETE_ADDRESS_MUTATION,
@@ -207,7 +203,7 @@ export async function action({request, context}: Route.ActionArgs) {
           }
 
           if (!data?.customerAddressDelete?.deletedAddressId) {
-            throw new Error('Customer address delete failed.');
+            throw new Error('Adres silinemedi.');
           }
 
           return {error: null, deletedAddress: addressId};
@@ -262,25 +258,24 @@ export default function Addresses() {
 
   return (
     <div className="account-addresses">
-      <h2>Addresses</h2>
-      <br />
-      <div>
-        <div>
-          <legend>Create address</legend>
-          <NewAddressForm key={addresses.nodes.length} />
-        </div>
-        <br />
-        <hr />
-        <br />
+      <h2 className="account-section__title">Adreslerim</h2>
+
+      <section className="account-address-block">
+        <h3 className="account-address-block__title">Yeni adres ekle</h3>
+        <NewAddressForm key={addresses.nodes.length} />
+      </section>
+
+      <section className="account-address-block">
+        <h3 className="account-address-block__title">Kayıtlı adresler</h3>
         {!addresses.nodes.length ? (
-          <p>You have no addresses saved.</p>
+          <p className="account-empty__text">Kayıtlı adresiniz yok.</p>
         ) : (
           <ExistingAddresses
             addresses={addresses}
             defaultAddress={defaultAddress}
           />
         )}
-      </div>
+      </section>
     </div>
   );
 }
@@ -291,7 +286,7 @@ function NewAddressForm() {
     address2: '',
     city: '',
     company: '',
-    territoryCode: '',
+    territoryCode: 'TR',
     firstName: '',
     id: 'new',
     lastName: '',
@@ -307,13 +302,14 @@ function NewAddressForm() {
       defaultAddress={null}
     >
       {({stateForMethod}) => (
-        <div>
+        <div className="account-form__actions">
           <button
+            className="account-btn"
             disabled={stateForMethod('POST') !== 'idle'}
             formMethod="POST"
             type="submit"
           >
-            {stateForMethod('POST') !== 'idle' ? 'Creating' : 'Create'}
+            {stateForMethod('POST') !== 'idle' ? 'Ekleniyor…' : 'Adres ekle'}
           </button>
         </div>
       )}
@@ -326,8 +322,7 @@ function ExistingAddresses({
   defaultAddress,
 }: Pick<CustomerFragment, 'addresses' | 'defaultAddress'>) {
   return (
-    <div>
-      <legend>Existing addresses</legend>
+    <div className="account-address-list">
       {addresses.nodes.map((address) => (
         <AddressForm
           key={address.id}
@@ -336,20 +331,22 @@ function ExistingAddresses({
           defaultAddress={defaultAddress}
         >
           {({stateForMethod}) => (
-            <div>
+            <div className="account-form__actions">
               <button
+                className="account-btn"
                 disabled={stateForMethod('PUT') !== 'idle'}
                 formMethod="PUT"
                 type="submit"
               >
-                {stateForMethod('PUT') !== 'idle' ? 'Saving' : 'Save'}
+                {stateForMethod('PUT') !== 'idle' ? 'Kaydediliyor…' : 'Kaydet'}
               </button>
               <button
+                className="account-btn account-btn--ghost"
                 disabled={stateForMethod('DELETE') !== 'idle'}
                 formMethod="DELETE"
                 type="submit"
               >
-                {stateForMethod('DELETE') !== 'idle' ? 'Deleting' : 'Delete'}
+                {stateForMethod('DELETE') !== 'idle' ? 'Siliniyor…' : 'Sil'}
               </button>
             </div>
           )}
@@ -376,137 +373,159 @@ export function AddressForm({
   const action = useActionData<ActionResponse>();
   const error = action?.error?.[addressId];
   const isDefaultAddress = defaultAddress?.id === addressId;
+
   return (
-    <Form id={addressId}>
-      <fieldset>
+    <Form id={addressId} className="account-form account-form--address">
+      <fieldset className="account-form__fieldset">
         <input type="hidden" name="addressId" defaultValue={addressId} />
-        <label htmlFor="firstName">First name*</label>
-        <input
-          aria-label="First name"
-          autoComplete="given-name"
-          defaultValue={address?.firstName ?? ''}
-          id="firstName"
-          name="firstName"
-          placeholder="First name"
-          required
-          type="text"
-        />
-        <label htmlFor="lastName">Last name*</label>
-        <input
-          aria-label="Last name"
-          autoComplete="family-name"
-          defaultValue={address?.lastName ?? ''}
-          id="lastName"
-          name="lastName"
-          placeholder="Last name"
-          required
-          type="text"
-        />
-        <label htmlFor="company">Company</label>
-        <input
-          aria-label="Company"
-          autoComplete="organization"
-          defaultValue={address?.company ?? ''}
-          id="company"
-          name="company"
-          placeholder="Company"
-          type="text"
-        />
-        <label htmlFor="address1">Address line*</label>
-        <input
-          aria-label="Address line 1"
-          autoComplete="address-line1"
-          defaultValue={address?.address1 ?? ''}
-          id="address1"
-          name="address1"
-          placeholder="Address line 1*"
-          required
-          type="text"
-        />
-        <label htmlFor="address2">Address line 2</label>
-        <input
-          aria-label="Address line 2"
-          autoComplete="address-line2"
-          defaultValue={address?.address2 ?? ''}
-          id="address2"
-          name="address2"
-          placeholder="Address line 2"
-          type="text"
-        />
-        <label htmlFor="city">City*</label>
-        <input
-          aria-label="City"
-          autoComplete="address-level2"
-          defaultValue={address?.city ?? ''}
-          id="city"
-          name="city"
-          placeholder="City"
-          required
-          type="text"
-        />
-        <label htmlFor="zoneCode">State / Province*</label>
-        <input
-          aria-label="State/Province"
-          autoComplete="address-level1"
-          defaultValue={address?.zoneCode ?? ''}
-          id="zoneCode"
-          name="zoneCode"
-          placeholder="State / Province"
-          required
-          type="text"
-        />
-        <label htmlFor="zip">Zip / Postal Code*</label>
-        <input
-          aria-label="Zip"
-          autoComplete="postal-code"
-          defaultValue={address?.zip ?? ''}
-          id="zip"
-          name="zip"
-          placeholder="Zip / Postal Code"
-          required
-          type="text"
-        />
-        <label htmlFor="territoryCode">Country Code*</label>
-        <input
-          aria-label="Country code"
-          autoComplete="country"
-          defaultValue={address?.territoryCode ?? ''}
-          id="territoryCode"
-          name="territoryCode"
-          placeholder="Country"
-          required
-          type="text"
-          maxLength={2}
-        />
-        <label htmlFor="phoneNumber">Phone</label>
-        <input
-          aria-label="Phone Number"
-          autoComplete="tel"
-          defaultValue={address?.phoneNumber ?? ''}
-          id="phoneNumber"
-          name="phoneNumber"
-          placeholder="+16135551111"
-          pattern="^\+?[1-9]\d{3,14}$"
-          type="tel"
-        />
-        <div>
+        <div className="account-form__grid">
+          <label className="account-field" htmlFor={`${addressId}-firstName`}>
+            <span>Ad*</span>
+            <input
+              aria-label="Ad"
+              autoComplete="given-name"
+              defaultValue={address?.firstName ?? ''}
+              id={`${addressId}-firstName`}
+              name="firstName"
+              placeholder="Ad"
+              required
+              type="text"
+            />
+          </label>
+          <label className="account-field" htmlFor={`${addressId}-lastName`}>
+            <span>Soyad*</span>
+            <input
+              aria-label="Soyad"
+              autoComplete="family-name"
+              defaultValue={address?.lastName ?? ''}
+              id={`${addressId}-lastName`}
+              name="lastName"
+              placeholder="Soyad"
+              required
+              type="text"
+            />
+          </label>
+          <label className="account-field" htmlFor={`${addressId}-company`}>
+            <span>Firma</span>
+            <input
+              aria-label="Firma"
+              autoComplete="organization"
+              defaultValue={address?.company ?? ''}
+              id={`${addressId}-company`}
+              name="company"
+              placeholder="Firma (opsiyonel)"
+              type="text"
+            />
+          </label>
+          <label className="account-field account-field--full" htmlFor={`${addressId}-address1`}>
+            <span>Adres*</span>
+            <input
+              aria-label="Adres satırı 1"
+              autoComplete="address-line1"
+              defaultValue={address?.address1 ?? ''}
+              id={`${addressId}-address1`}
+              name="address1"
+              placeholder="Sokak, mahalle, bina no"
+              required
+              type="text"
+            />
+          </label>
+          <label className="account-field account-field--full" htmlFor={`${addressId}-address2`}>
+            <span>Adres satırı 2</span>
+            <input
+              aria-label="Adres satırı 2"
+              autoComplete="address-line2"
+              defaultValue={address?.address2 ?? ''}
+              id={`${addressId}-address2`}
+              name="address2"
+              placeholder="Daire, kat (opsiyonel)"
+              type="text"
+            />
+          </label>
+          <label className="account-field" htmlFor={`${addressId}-city`}>
+            <span>İlçe / Şehir*</span>
+            <input
+              aria-label="Şehir"
+              autoComplete="address-level2"
+              defaultValue={address?.city ?? ''}
+              id={`${addressId}-city`}
+              name="city"
+              placeholder="İstanbul"
+              required
+              type="text"
+            />
+          </label>
+          <label className="account-field" htmlFor={`${addressId}-zoneCode`}>
+            <span>İl*</span>
+            <input
+              aria-label="İl"
+              autoComplete="address-level1"
+              defaultValue={address?.zoneCode ?? ''}
+              id={`${addressId}-zoneCode`}
+              name="zoneCode"
+              placeholder="34 veya İstanbul"
+              required
+              type="text"
+            />
+          </label>
+          <label className="account-field" htmlFor={`${addressId}-zip`}>
+            <span>Posta kodu*</span>
+            <input
+              aria-label="Posta kodu"
+              autoComplete="postal-code"
+              defaultValue={address?.zip ?? ''}
+              id={`${addressId}-zip`}
+              name="zip"
+              placeholder="34000"
+              required
+              type="text"
+            />
+          </label>
+          <label className="account-field" htmlFor={`${addressId}-territoryCode`}>
+            <span>Ülke kodu*</span>
+            <input
+              aria-label="Ülke kodu"
+              autoComplete="country"
+              defaultValue={address?.territoryCode ?? 'TR'}
+              id={`${addressId}-territoryCode`}
+              name="territoryCode"
+              placeholder="TR"
+              required
+              type="text"
+              maxLength={2}
+            />
+          </label>
+          <label className="account-field" htmlFor={`${addressId}-phoneNumber`}>
+            <span>Telefon</span>
+            <input
+              aria-label="Telefon"
+              autoComplete="tel"
+              defaultValue={address?.phoneNumber ?? ''}
+              id={`${addressId}-phoneNumber`}
+              name="phoneNumber"
+              placeholder="+905551112233"
+              pattern="^\+?[1-9]\d{3,14}$"
+              type="tel"
+            />
+          </label>
+        </div>
+
+        <label className="account-checkbox" htmlFor={`${addressId}-defaultAddress`}>
           <input
             defaultChecked={isDefaultAddress}
-            id="defaultAddress"
+            id={`${addressId}-defaultAddress`}
             name="defaultAddress"
             type="checkbox"
           />
-          <label htmlFor="defaultAddress">Set as default address</label>
-        </div>
+          <span>Varsayılan adres olarak ayarla</span>
+        </label>
+
         {error ? (
-          <p>
-            <mark>
-              <small>{error}</small>
-            </mark>
+          <p className="account-form__error" role="alert">
+            {error}
           </p>
-        ) : (
-          <br />
-        )}
+        ) : null}
+
         {children({
           stateForMethod: (method) => (formMethod === method ? state : 'idle'),
         })}

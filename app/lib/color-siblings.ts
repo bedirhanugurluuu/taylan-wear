@@ -25,6 +25,7 @@ type SiblingProduct = {
  *
  * Each color is a separate Shopify product (own URL / SEO).
  * Swatch images use each product's featured image.
+ * Order is stable across sibling pages (by color name, then handle).
  */
 export function getColorSiblingSwatches(
   product: ProductFragment,
@@ -68,5 +69,11 @@ export function getColorSiblingSwatches(
 
   if (others.length === 0) return [];
 
-  return [current, ...others];
+  // Keep swatch order identical on every sibling PDP (selected is a flag, not position)
+  return [current, ...others].sort((a, b) => {
+    const byName = a.colorName.localeCompare(b.colorName, 'tr', {
+      sensitivity: 'base',
+    });
+    return byName !== 0 ? byName : a.handle.localeCompare(b.handle);
+  });
 }

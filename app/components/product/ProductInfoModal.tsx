@@ -18,7 +18,7 @@ const TABS: Array<{id: ProductInfoTabId; label: string}> = [
   {id: 'details', label: 'Detaylar'},
   {id: 'quality', label: 'Kalite'},
   {id: 'measure', label: 'Nasıl ölçülür'},
-  {id: 'fit', label: 'Fit'},
+  {id: 'fit', label: 'Kalıp'},
   {id: 'returns', label: 'İade'},
 ];
 
