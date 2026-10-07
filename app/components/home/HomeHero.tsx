@@ -13,7 +13,7 @@ export function HomeHero() {
           alt={image.alt}
           width={2400}
           height={1600}
-          fetchPriority="high"
+          loading="eager"
           decoding="async"
         />
         <div className="home-hero__overlay" aria-hidden="true" />

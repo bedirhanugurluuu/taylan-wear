@@ -1,3 +1,4 @@
+import type {ReactNode} from 'react';
 import {Analytics, getShopAnalytics, useNonce} from '@shopify/hydrogen';
 import {
   Outlet,
@@ -18,7 +19,7 @@ import {
   FEATURED_PRODUCTS_QUERY,
   NEW_PRODUCTS_QUERY,
 } from '~/lib/product-queries';
-import resetStyles from '~/styles/reset.css?url';
+import resetStylesInline from '~/styles/reset.css?inline';
 import appStyles from '~/styles/app.css?url';
 import tailwindCss from './styles/tailwind.css?url';
 import {PageLayout} from './components/PageLayout';
@@ -48,38 +49,21 @@ export const shouldRevalidate: ShouldRevalidateFunction = ({
 };
 
 /**
- * The main and reset stylesheets are added in the Layout component
- * to prevent a bug in development HMR updates.
- *
- * This avoids the "failed to execute 'insertBefore' on 'Node'" error
- * that occurs after editing and navigating to another page.
- *
- * It's a temporary fix until the issue is resolved.
- * https://github.com/remix-run/remix/issues/9242
+ * Stylesheets live in links() (Hydrogen default). Critical reset/shell CSS is
+ * inlined in Layout without a nonce so SSR/client <head> trees match.
  */
 export function links() {
   return [
-    {
-      rel: 'preconnect',
-      href: 'https://cdn.shopify.com',
-    },
-    {
-      rel: 'preconnect',
-      href: 'https://shop.app',
-    },
-    {
-      rel: 'preconnect',
-      href: 'https://fonts.googleapis.com',
-    },
+    {rel: 'preconnect', href: 'https://cdn.shopify.com'},
+    {rel: 'preconnect', href: 'https://shop.app'},
+    {rel: 'preconnect', href: 'https://fonts.googleapis.com'},
     {
       rel: 'preconnect',
       href: 'https://fonts.gstatic.com',
       crossOrigin: 'anonymous',
     },
-    // Preload local CSS early so navigations / remounts reapply faster
-    {rel: 'preload', as: 'style', href: tailwindCss},
-    {rel: 'preload', as: 'style', href: resetStyles},
-    {rel: 'preload', as: 'style', href: appStyles},
+    {rel: 'stylesheet', href: tailwindCss},
+    {rel: 'stylesheet', href: appStyles},
     {
       rel: 'stylesheet',
       href: 'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=optional',
@@ -106,7 +90,10 @@ export async function loader(args: Route.LoaderArgs) {
       publicStorefrontId: env.PUBLIC_STOREFRONT_ID,
     }),
     consent: {
-      checkoutDomain: env.PUBLIC_CHECKOUT_DOMAIN,
+      // Local/mock shops often omit PUBLIC_CHECKOUT_DOMAIN; store domain is enough
+      // for Analytics.Provider to initialize without throwing.
+      checkoutDomain:
+        env.PUBLIC_CHECKOUT_DOMAIN || env.PUBLIC_STORE_DOMAIN || '',
       storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
       withPrivacyBanner: false,
       // localize the privacy banner
@@ -159,7 +146,7 @@ function loadDeferredData({context}: Route.LoaderArgs) {
   };
 }
 
-export function Layout({children}: {children?: React.ReactNode}) {
+export function Layout({children}: {children?: ReactNode}) {
   const nonce = useNonce();
 
   return (
@@ -167,38 +154,55 @@ export function Layout({children}: {children?: React.ReactNode}) {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <Meta />
+        <Links />
         {/*
-          Critical shell styles stay inlined so a brief stylesheet remount
-          (FOUC on nav / StrictMode / HMR) never shows a naked HTML skeleton.
+          Critical CSS after Meta/Links keeps hydrate order stable.
+          No nonce — empty client nonce vs SSR nonce was desyncing <head>.
         */}
         <style
-          nonce={nonce}
           dangerouslySetInnerHTML={{
-            __html: `
-              :root{--header-height:64px;--top-bar-height:34px;--font-body:system-ui,-apple-system,sans-serif}
+            __html: `${resetStylesInline}
+              :root{--header-height:64px;--top-bar-height:34px;--font-body:'Inter',system-ui,-apple-system,sans-serif;--color-dark:#000;--color-light:#fff}
               html,body{margin:0;background:#fff;color:#000;font-family:var(--font-body)}
+              main{flex:1;min-width:0}
               .site-header{position:sticky;top:0;z-index:50}
-              .top-bar{background:#000;color:#fff;min-height:var(--top-bar-height);font-size:.6875rem;letter-spacing:.06em;text-transform:uppercase}
-              .top-bar__inner{display:grid;grid-template-columns:1fr 1fr;gap:1rem;align-items:center;min-height:var(--top-bar-height);padding:.4rem 1rem}
+              .top-bar{background:#000;color:#fff;min-height:var(--top-bar-height);font-size:.6875rem;letter-spacing:.06em;text-transform:uppercase;line-height:1.3}
+              .top-bar__inner{display:grid;grid-template-columns:1fr 1fr;gap:1rem;align-items:center;min-height:var(--top-bar-height);padding:.4rem 1rem;max-width:100%}
               .top-bar__left{display:none}.top-bar__right{text-align:center;grid-column:1/-1}
+              .top-bar__link{color:inherit;text-decoration:none}
               .header{position:relative;display:flex;flex-direction:column;background:#fff;color:#000}
               .header__bar{display:flex;align-items:center;justify-content:space-between;gap:1rem;height:var(--header-height);padding:0 1rem}
+              .header__brand{display:flex;align-items:center;gap:1.25rem;min-width:0}
               .header__logo{color:inherit;text-decoration:none;font-size:1rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;white-space:nowrap}
               .header__actions{display:flex;align-items:center;gap:.35rem;margin-left:auto}
+              .header__icon-btn{display:inline-flex;align-items:center;justify-content:center;width:2.5rem;height:2.5rem;padding:0;border:0;background:transparent;color:inherit;cursor:pointer}
               .header-menu--desktop{display:none}
+              .header-menu__item{color:inherit;text-decoration:none;font-size:.8125rem;font-weight:500;letter-spacing:.04em;text-transform:uppercase}
+              .footer{margin-top:auto;background:#111;color:#fff}
+              .product-page__layout{display:grid;grid-template-columns:1fr;gap:1.25rem}
+              .product-gallery--grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+              .product-gallery--desktop{display:none}
+              .product-gallery-mobile{display:block}
+              .product-gallery__item{aspect-ratio:4/5;overflow:hidden;background:#f2f2f2}
+              .product-gallery__item img{width:100%;height:100%;object-fit:cover;display:block}
               @media(min-width:768px){
+                .top-bar__inner{padding-inline:1.5rem}
                 .top-bar__left{display:block}.top-bar__right{text-align:right;grid-column:auto}
-                .header-menu--desktop{display:flex}.header__menu-toggle{display:none}
+                .header__bar{padding-inline:1.5rem}
+                .header-menu--desktop{display:flex;align-items:center;gap:1.25rem}
+                .header__menu-toggle{display:none}
+              }
+              @media(min-width:1024px){
+                .product-page__layout{grid-template-columns:repeat(24,1fr);gap:0;align-items:start}
+                .product-page__gallery{grid-column:span 16}
+                .product-page__info{grid-column:span 8}
+                .product-gallery--desktop{display:grid}
+                .product-gallery-mobile{display:none}
               }
             `,
           }}
         />
-        {/* Stylesheets before Meta/Links so the browser discovers them first in the stream */}
-        <link rel="stylesheet" href={tailwindCss} />
-        <link rel="stylesheet" href={resetStyles} />
-        <link rel="stylesheet" href={appStyles} />
-        <Meta />
-        <Links />
       </head>
       <body>
         {children}
@@ -206,6 +210,30 @@ export function Layout({children}: {children?: React.ReactNode}) {
         <Scripts nonce={nonce} />
       </body>
     </html>
+  );
+}
+
+function AppShell({
+  data,
+  children,
+}: {
+  data: NonNullable<ReturnType<typeof useRouteLoaderData<RootLoader>>>;
+  children: ReactNode;
+}) {
+  const canUseAnalytics = Boolean(data.consent?.checkoutDomain);
+
+  const shell = <PageLayout {...data}>{children}</PageLayout>;
+
+  if (!canUseAnalytics) return shell;
+
+  return (
+    <Analytics.Provider
+      cart={data.cart}
+      shop={data.shop}
+      consent={data.consent}
+    >
+      {shell}
+    </Analytics.Provider>
   );
 }
 
@@ -217,15 +245,9 @@ export default function App() {
   }
 
   return (
-    <Analytics.Provider
-      cart={data.cart}
-      shop={data.shop}
-      consent={data.consent}
-    >
-      <PageLayout {...data}>
-        <Outlet />
-      </PageLayout>
-    </Analytics.Provider>
+    <AppShell data={data}>
+      <Outlet />
+    </AppShell>
   );
 }
 
@@ -261,13 +283,5 @@ export function ErrorBoundary() {
     return content;
   }
 
-  return (
-    <Analytics.Provider
-      cart={data.cart}
-      shop={data.shop}
-      consent={data.consent}
-    >
-      <PageLayout {...data}>{content}</PageLayout>
-    </Analytics.Provider>
-  );
+  return <AppShell data={data}>{content}</AppShell>;
 }

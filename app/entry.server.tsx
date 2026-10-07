@@ -19,6 +19,13 @@ export default async function handleRequest(
       checkoutDomain: context.env.PUBLIC_CHECKOUT_DOMAIN,
       storeDomain: context.env.PUBLIC_STORE_DOMAIN,
     },
+    // Inter font stylesheet + files (blocked without these)
+    styleSrc: ['https://fonts.googleapis.com'],
+    fontSrc: [
+      "'self'",
+      'https://fonts.gstatic.com',
+      'https://cdn.shopify.com',
+    ],
   });
 
   const body = await renderToReadableStream(

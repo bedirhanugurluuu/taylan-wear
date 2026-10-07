@@ -16,6 +16,9 @@ export default defineConfig({
     tsconfigPaths: true,
   },
   build: {
+    // Keep CSS in one file so client navigations don't wait on
+    // route-split stylesheets (common FOUC cause in production).
+    cssCodeSplit: false,
     // Allow a strict Content-Security-Policy
     // without inlining assets as base64:
     assetsInlineLimit: 0,

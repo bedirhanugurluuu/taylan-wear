@@ -847,9 +847,31 @@ button.reset:hover:not(:has(> *)) {
   display: flex;
   gap: 8px;
   overflow-x: auto;
+  overscroll-behavior-x: contain;
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
+}
+
+.product-slider__track.is-dragging {
+  cursor: grabbing;
+  scroll-snap-type: none;
+  user-select: none;
+}
+
+.product-slider__track.is-dragging .product-slider__slide {
+  pointer-events: none;
+}
+
+.product-slider__track.is-dragging .product-card__img--secondary,
+.product-slider__track.is-dragging .product-card__save {
+  opacity: 0;
+  transition: none;
+}
+
+.product-slider__track img,
+.product-slider__track a {
+  -webkit-user-drag: none;
 }
 
 .product-slider__track::-webkit-scrollbar {
@@ -917,6 +939,8 @@ button.reset:hover:not(:has(> *)) {
 }
 
 .product-slider--aside {
+  min-width: 0;
+  max-width: 100%;
   padding: 1.25rem 0 0.5rem;
 }
 
@@ -926,8 +950,16 @@ button.reset:hover:not(:has(> *)) {
   letter-spacing: 0.06em;
 }
 
+.product-slider--aside .product-slider__viewport {
+  min-width: 0;
+}
+
 .product-slider--aside .product-slider__track {
-  scroll-padding-inline: 1.25rem;
+  cursor: grab;
+  min-width: 0;
+  scroll-padding-inline: 0;
+  scroll-snap-type: x proximity;
+  width: 100%;
 }
 
 .product-slider--aside .product-slider__slide {
@@ -935,7 +967,23 @@ button.reset:hover:not(:has(> *)) {
 }
 
 .product-slider--aside .product-slider__nav {
-  display: none;
+  display: flex;
+  width: 28px;
+  height: 28px;
+  top: 34%;
+  opacity: 1;
+  pointer-events: auto;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid #e6e6e6;
+}
+
+.product-slider--aside .product-slider__nav:disabled {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.product-slider__nav:disabled {
+  cursor: default;
 }
 
 .product-slider__loading--aside {
@@ -1577,7 +1625,7 @@ button.reset:hover:not(:has(> *)) {
   display: flex;
   flex-direction: column;
   gap: 0.65rem;
-  padding: 0 1.25rem 0.5rem;
+  padding-bottom: 40px;
 }
 
 .cart-empty__text {
@@ -2892,6 +2940,15 @@ button.reset:hover:not(:has(> *)) {
   gap: 8px;
 }
 
+/* Desktop grid is always in the HTML; CSS decides visibility (no JS flash). */
+.product-gallery--desktop {
+  display: none;
+}
+
+.product-gallery-mobile {
+  display: block;
+}
+
 .product-gallery--fallback {
   display: grid;
 }
@@ -3168,6 +3225,7 @@ button.reset:hover:not(:has(> *)) {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  padding-top: 8px;
 }
 
 .product-sizes__btn {
@@ -3469,6 +3527,14 @@ button.reset:hover:not(:has(> *)) {
 }
 
 @media (min-width: 1024px) {
+  .product-gallery--desktop {
+    display: grid;
+  }
+
+  .product-gallery-mobile {
+    display: none;
+  }
+
   .product-page {
     padding-bottom: 4rem;
   }
