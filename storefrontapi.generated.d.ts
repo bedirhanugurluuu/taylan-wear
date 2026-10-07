@@ -270,12 +270,20 @@ export type CartApiQueryFragment = Pick<
 export type MenuItemFragment = Pick<
   StorefrontAPI.MenuItem,
   'id' | 'resourceId' | 'tags' | 'title' | 'type' | 'url'
->;
+> & {
+  resource?: StorefrontAPI.Maybe<{
+    image?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Image, 'url' | 'altText'>>;
+  }>;
+};
 
 export type ChildMenuItemFragment = Pick<
   StorefrontAPI.MenuItem,
   'id' | 'resourceId' | 'tags' | 'title' | 'type' | 'url'
->;
+> & {
+  resource?: StorefrontAPI.Maybe<{
+    image?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Image, 'url' | 'altText'>>;
+  }>;
+};
 
 export type ParentMenuItemFragment = Pick<
   StorefrontAPI.MenuItem,
@@ -285,8 +293,17 @@ export type ParentMenuItemFragment = Pick<
     Pick<
       StorefrontAPI.MenuItem,
       'id' | 'resourceId' | 'tags' | 'title' | 'type' | 'url'
-    >
+    > & {
+      resource?: StorefrontAPI.Maybe<{
+        image?: StorefrontAPI.Maybe<
+          Pick<StorefrontAPI.Image, 'url' | 'altText'>
+        >;
+      }>;
+    }
   >;
+  resource?: StorefrontAPI.Maybe<{
+    image?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Image, 'url' | 'altText'>>;
+  }>;
 };
 
 export type MenuFragment = Pick<StorefrontAPI.Menu, 'id'> & {
@@ -299,8 +316,19 @@ export type MenuFragment = Pick<StorefrontAPI.Menu, 'id'> & {
         Pick<
           StorefrontAPI.MenuItem,
           'id' | 'resourceId' | 'tags' | 'title' | 'type' | 'url'
-        >
+        > & {
+          resource?: StorefrontAPI.Maybe<{
+            image?: StorefrontAPI.Maybe<
+              Pick<StorefrontAPI.Image, 'url' | 'altText'>
+            >;
+          }>;
+        }
       >;
+      resource?: StorefrontAPI.Maybe<{
+        image?: StorefrontAPI.Maybe<
+          Pick<StorefrontAPI.Image, 'url' | 'altText'>
+        >;
+      }>;
     }
   >;
 };
@@ -343,8 +371,19 @@ export type HeaderQuery = {
             Pick<
               StorefrontAPI.MenuItem,
               'id' | 'resourceId' | 'tags' | 'title' | 'type' | 'url'
-            >
+            > & {
+              resource?: StorefrontAPI.Maybe<{
+                image?: StorefrontAPI.Maybe<
+                  Pick<StorefrontAPI.Image, 'url' | 'altText'>
+                >;
+              }>;
+            }
           >;
+          resource?: StorefrontAPI.Maybe<{
+            image?: StorefrontAPI.Maybe<
+              Pick<StorefrontAPI.Image, 'url' | 'altText'>
+            >;
+          }>;
         }
       >;
     }
@@ -369,8 +408,19 @@ export type FooterQuery = {
             Pick<
               StorefrontAPI.MenuItem,
               'id' | 'resourceId' | 'tags' | 'title' | 'type' | 'url'
-            >
+            > & {
+              resource?: StorefrontAPI.Maybe<{
+                image?: StorefrontAPI.Maybe<
+                  Pick<StorefrontAPI.Image, 'url' | 'altText'>
+                >;
+              }>;
+            }
           >;
+          resource?: StorefrontAPI.Maybe<{
+            image?: StorefrontAPI.Maybe<
+              Pick<StorefrontAPI.Image, 'url' | 'altText'>
+            >;
+          }>;
         }
       >;
     }
@@ -1533,11 +1583,11 @@ export type PredictiveSearchQuery = {
 };
 
 interface GeneratedQueryTypes {
-  '#graphql\n  fragment Shop on Shop {\n    id\n    name\n    description\n    primaryDomain {\n      url\n    }\n    brand {\n      logo {\n        image {\n          url\n        }\n      }\n    }\n  }\n  query Header(\n    $country: CountryCode\n    $headerMenuHandle: String!\n    $language: LanguageCode\n  ) @inContext(language: $language, country: $country) {\n    shop {\n      ...Shop\n    }\n    menu(handle: $headerMenuHandle) {\n      ...Menu\n    }\n  }\n  #graphql\n  fragment MenuItem on MenuItem {\n    id\n    resourceId\n    tags\n    title\n    type\n    url\n  }\n  fragment ChildMenuItem on MenuItem {\n    ...MenuItem\n  }\n  fragment ParentMenuItem on MenuItem {\n    ...MenuItem\n    items {\n      ...ChildMenuItem\n    }\n  }\n  fragment Menu on Menu {\n    id\n    items {\n      ...ParentMenuItem\n    }\n  }\n\n': {
+  '#graphql\n  fragment Shop on Shop {\n    id\n    name\n    description\n    primaryDomain {\n      url\n    }\n    brand {\n      logo {\n        image {\n          url\n        }\n      }\n    }\n  }\n  query Header(\n    $country: CountryCode\n    $headerMenuHandle: String!\n    $language: LanguageCode\n  ) @inContext(language: $language, country: $country) {\n    shop {\n      ...Shop\n    }\n    menu(handle: $headerMenuHandle) {\n      ...Menu\n    }\n  }\n  #graphql\n  fragment MenuItem on MenuItem {\n    id\n    resourceId\n    tags\n    title\n    type\n    url\n    resource {\n      ... on Collection {\n        image {\n          url\n          altText\n        }\n      }\n    }\n  }\n  fragment ChildMenuItem on MenuItem {\n    ...MenuItem\n  }\n  fragment ParentMenuItem on MenuItem {\n    ...MenuItem\n    items {\n      ...ChildMenuItem\n    }\n  }\n  fragment Menu on Menu {\n    id\n    items {\n      ...ParentMenuItem\n    }\n  }\n\n': {
     return: HeaderQuery;
     variables: HeaderQueryVariables;
   };
-  '#graphql\n  query Footer(\n    $country: CountryCode\n    $footerMenuHandle: String!\n    $language: LanguageCode\n  ) @inContext(language: $language, country: $country) {\n    menu(handle: $footerMenuHandle) {\n      ...Menu\n    }\n  }\n  #graphql\n  fragment MenuItem on MenuItem {\n    id\n    resourceId\n    tags\n    title\n    type\n    url\n  }\n  fragment ChildMenuItem on MenuItem {\n    ...MenuItem\n  }\n  fragment ParentMenuItem on MenuItem {\n    ...MenuItem\n    items {\n      ...ChildMenuItem\n    }\n  }\n  fragment Menu on Menu {\n    id\n    items {\n      ...ParentMenuItem\n    }\n  }\n\n': {
+  '#graphql\n  query Footer(\n    $country: CountryCode\n    $footerMenuHandle: String!\n    $language: LanguageCode\n  ) @inContext(language: $language, country: $country) {\n    menu(handle: $footerMenuHandle) {\n      ...Menu\n    }\n  }\n  #graphql\n  fragment MenuItem on MenuItem {\n    id\n    resourceId\n    tags\n    title\n    type\n    url\n    resource {\n      ... on Collection {\n        image {\n          url\n          altText\n        }\n      }\n    }\n  }\n  fragment ChildMenuItem on MenuItem {\n    ...MenuItem\n  }\n  fragment ParentMenuItem on MenuItem {\n    ...MenuItem\n    items {\n      ...ChildMenuItem\n    }\n  }\n  fragment Menu on Menu {\n    id\n    items {\n      ...ParentMenuItem\n    }\n  }\n\n': {
     return: FooterQuery;
     variables: FooterQueryVariables;
   };

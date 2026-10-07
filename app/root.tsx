@@ -4,6 +4,7 @@ import {
   useRouteError,
   isRouteErrorResponse,
   type ShouldRevalidateFunction,
+  Link,
   Links,
   Meta,
   Scripts,
@@ -180,7 +181,8 @@ export function Layout({children}: {children?: React.ReactNode}) {
               .top-bar{background:#000;color:#fff;min-height:var(--top-bar-height);font-size:.6875rem;letter-spacing:.06em;text-transform:uppercase}
               .top-bar__inner{display:grid;grid-template-columns:1fr 1fr;gap:1rem;align-items:center;min-height:var(--top-bar-height);padding:.4rem 1rem}
               .top-bar__left{display:none}.top-bar__right{text-align:center;grid-column:1/-1}
-              .header{display:flex;align-items:center;justify-content:space-between;gap:1rem;height:var(--header-height);padding:0 1rem;background:#fff;color:#000}
+              .header{position:relative;display:flex;flex-direction:column;background:#fff;color:#000}
+              .header__bar{display:flex;align-items:center;justify-content:space-between;gap:1rem;height:var(--header-height);padding:0 1rem}
               .header__logo{color:inherit;text-decoration:none;font-size:1rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;white-space:nowrap}
               .header__actions{display:flex;align-items:center;gap:.35rem;margin-left:auto}
               .header-menu--desktop{display:none}
@@ -229,6 +231,7 @@ export default function App() {
 
 export function ErrorBoundary() {
   const error = useRouteError();
+  const data = useRouteLoaderData<RootLoader>('root');
   let errorStatus = 500;
   let isNotFound = false;
 
@@ -237,9 +240,8 @@ export function ErrorBoundary() {
     isNotFound = error.status === 404;
   }
 
-  return (
+  const content = (
     <div className="route-error">
-      <p className="route-error__brand">Taylan Wear</p>
       <p className="route-error__code">{errorStatus}</p>
       <h1 className="route-error__title">
         {isNotFound ? 'Sayfa bulunamadı' : 'Bir şeyler ters gitti'}
@@ -249,9 +251,23 @@ export function ErrorBoundary() {
           ? 'Aradığın sayfa taşınmış veya hiç var olmamış olabilir.'
           : 'Beklenmeyen bir hata oluştu. Ana sayfaya dönüp tekrar deneyebilirsin.'}
       </p>
-      <a className="route-error__cta" href="/">
+      <Link className="route-error__cta" to="/">
         Ana sayfaya dön
-      </a>
+      </Link>
     </div>
+  );
+
+  if (!data) {
+    return content;
+  }
+
+  return (
+    <Analytics.Provider
+      cart={data.cart}
+      shop={data.shop}
+      consent={data.consent}
+    >
+      <PageLayout {...data}>{content}</PageLayout>
+    </Analytics.Provider>
   );
 }

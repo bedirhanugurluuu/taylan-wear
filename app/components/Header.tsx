@@ -1,4 +1,4 @@
-import {Suspense, useEffect, useState} from 'react';
+import {Suspense, useEffect, useMemo, useState} from 'react';
 import {
   Await,
   NavLink,
@@ -19,6 +19,7 @@ import {
   IconUser,
 } from '~/components/icons/HeaderIcons';
 import {HeaderWishlistButton} from '~/components/Wishlist';
+import {CATEGORIES, HEADER_NAV} from '~/lib/site-content';
 
 interface HeaderProps {
   header: HeaderQuery;
@@ -28,6 +29,120 @@ interface HeaderProps {
 }
 
 type Viewport = 'desktop' | 'mobile';
+
+type NavLinkItem = {
+  label: string;
+  href: string;
+  image?: string | null;
+};
+
+type NavItem = {
+  id: string;
+  title: string;
+  href: string;
+  image: string | null;
+  links: NavLinkItem[] | null;
+};
+
+function toPathname(
+  url: string | null | undefined,
+  publicStoreDomain: string,
+  primaryDomainUrl: string,
+) {
+  if (!url) return '/';
+
+  if (
+    url.includes('myshopify.com') ||
+    url.includes(publicStoreDomain) ||
+    url.includes(primaryDomainUrl)
+  ) {
+    return new URL(url).pathname;
+  }
+
+  return url;
+}
+
+function imageForHref(href: string, fallback?: string | null) {
+  const match = CATEGORIES.find((item) => item.href === href);
+  return match?.image ?? fallback ?? null;
+}
+
+export function buildNavItems({
+  menu,
+  publicStoreDomain,
+  primaryDomainUrl,
+}: {
+  menu: HeaderProps['header']['menu'];
+  publicStoreDomain: string;
+  primaryDomainUrl: string;
+}): NavItem[] {
+  if (menu?.items?.length) {
+    return menu.items
+      .map((item) => {
+        if (!item.url) return null;
+
+        const href = toPathname(
+          item.url,
+          publicStoreDomain,
+          primaryDomainUrl,
+        );
+        const childLinks =
+          item.items?.length > 0
+            ? item.items
+                .filter((child) => Boolean(child.url))
+                .map((child) => {
+                  const childHref = toPathname(
+                    child.url,
+                    publicStoreDomain,
+                    primaryDomainUrl,
+                  );
+                  const childImage =
+                    child.resource &&
+                    'image' in child.resource &&
+                    child.resource.image?.url
+                      ? child.resource.image.url
+                      : imageForHref(childHref);
+
+                  return {
+                    label: child.title,
+                    href: childHref,
+                    image: childImage,
+                  };
+                })
+            : null;
+
+        const parentImage =
+          item.resource &&
+          'image' in item.resource &&
+          item.resource.image?.url
+            ? item.resource.image.url
+            : childLinks?.[0]?.image ?? imageForHref(href);
+
+        return {
+          id: item.id,
+          title: item.title,
+          href,
+          image: parentImage,
+          links: childLinks,
+        } satisfies NavItem;
+      })
+      .filter((item): item is NavItem => Boolean(item));
+  }
+
+  return HEADER_NAV.map((item) => ({
+    id: item.href,
+    title: item.title,
+    href: item.href,
+    image: item.image,
+    links: item.links
+      ? item.links.map((link) => ({
+          label: link.label,
+          href: link.href,
+          image: imageForHref(link.href),
+        }))
+      : null,
+  }));
+}
 
 export function Header({
   header,
@@ -40,6 +155,17 @@ export function Header({
   const isHome = pathname === '/';
   const [scrolled, setScrolled] = useState(false);
   const [hovered, setHovered] = useState(false);
+  const [activeMega, setActiveMega] = useState<string | null>(null);
+
+  const navItems = useMemo(
+    () =>
+      buildNavItems({
+        menu,
+        publicStoreDomain,
+        primaryDomainUrl: shop.primaryDomain.url,
+      }),
+    [menu, publicStoreDomain, shop.primaryDomain.url],
+  );
 
   useEffect(() => {
     const onScroll = () => {
@@ -51,14 +177,18 @@ export function Header({
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  // Homepage: transparent until hover or scroll. Other pages: always solid.
-  const isSolid = !isHome || scrolled || hovered;
+  const megaItem = navItems.find(
+    (item) => item.id === activeMega && item.links?.length,
+  );
+  const megaOpen = Boolean(megaItem);
+  const isSolid = !isHome || scrolled || hovered || megaOpen;
 
   const className = [
     'header',
     isHome ? 'header--home' : 'header--solid',
     scrolled ? 'is-scrolled' : '',
-    hovered ? 'is-hovered' : '',
+    hovered || megaOpen ? 'is-hovered' : '',
+    megaOpen ? 'is-mega-open' : '',
     isSolid ? 'is-solid' : 'is-transparent',
   ]
     .filter(Boolean)
@@ -68,39 +198,104 @@ export function Header({
     <header
       className={className}
       onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      onMouseLeave={() => {
+        setHovered(false);
+        setActiveMega(null);
+      }}
     >
-      <div className="header__brand">
-        <NavLink prefetch="intent" to="/" className="header__logo" end>
-          {shop.name}
-        </NavLink>
+      <div className="header__bar">
+        <div className="header__brand">
+          <NavLink prefetch="intent" to="/" className="header__logo" end>
+            {shop.name}
+          </NavLink>
 
-        <HeaderMenu
-          menu={menu}
-          viewport="desktop"
-          primaryDomainUrl={header.shop.primaryDomain.url}
-          publicStoreDomain={publicStoreDomain}
-        />
+          <HeaderMenu
+            items={navItems}
+            viewport="desktop"
+            activeMega={activeMega}
+            onMegaEnter={setActiveMega}
+          />
+        </div>
+
+        <HeaderCtas isLoggedIn={isLoggedIn} cart={cart} />
       </div>
 
-      <HeaderCtas isLoggedIn={isLoggedIn} cart={cart} />
+      {megaItem && megaItem.links ? (
+        <div
+          className="header-mega"
+          role="region"
+          aria-label={`${megaItem.title} menü`}
+        >
+          <div className="header-mega__inner">
+            <ul className="header-mega__links">
+              {megaItem.links.map((link) => (
+                <li key={link.href}>
+                  <NavLink
+                    to={link.href}
+                    prefetch="intent"
+                    className="header-mega__link"
+                    onClick={() => setActiveMega(null)}
+                  >
+                    {link.label}
+                  </NavLink>
+                </li>
+              ))}
+            </ul>
+            {megaItem.image ? (
+              <div className="header-mega__media">
+                <NavLink
+                  to={megaItem.href}
+                  prefetch="intent"
+                  className="header-mega__media-link"
+                  onClick={() => setActiveMega(null)}
+                  aria-label={`${megaItem.title} koleksiyonunu gör`}
+                >
+                  <img
+                    src={megaItem.image}
+                    alt={megaItem.title}
+                    width={720}
+                    height={900}
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </NavLink>
+              </div>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
     </header>
   );
 }
 
 export function HeaderMenu({
-  menu,
-  primaryDomainUrl,
+  items,
   viewport,
-  publicStoreDomain,
+  activeMega,
+  onMegaEnter,
 }: {
-  menu: HeaderProps['header']['menu'];
-  primaryDomainUrl: HeaderProps['header']['shop']['primaryDomain']['url'];
+  items?: NavItem[];
   viewport: Viewport;
-  publicStoreDomain: HeaderProps['publicStoreDomain'];
+  activeMega?: string | null;
+  onMegaEnter?: (id: string | null) => void;
 }) {
   const className = `header-menu header-menu--${viewport}`;
   const {close} = useAside();
+  const navItems =
+    items ??
+    HEADER_NAV.map((item) => ({
+      id: item.href,
+      title: item.title,
+      href: item.href,
+      image: item.image,
+      links: item.links
+        ? item.links.map((link) => ({
+            label: link.label,
+            href: link.href,
+            image: imageForHref(link.href),
+          }))
+        : null,
+    }));
 
   return (
     <nav className={className} role="navigation" aria-label="Ana menü">
@@ -115,15 +310,56 @@ export function HeaderMenu({
           Anasayfa
         </NavLink>
       )}
-      {(menu || FALLBACK_HEADER_MENU).items.map((item) => {
-        if (!item.url) return null;
+      {navItems.map((item) => {
+        const hasMega = Boolean(item.links?.length);
 
-        const url =
-          item.url.includes('myshopify.com') ||
-          item.url.includes(publicStoreDomain) ||
-          item.url.includes(primaryDomainUrl)
-            ? new URL(item.url).pathname
-            : item.url;
+        if (viewport === 'desktop' && hasMega) {
+          return (
+            <div
+              key={item.id}
+              className={`header-menu__trigger${
+                activeMega === item.id ? ' is-active' : ''
+              }`}
+              onMouseEnter={() => onMegaEnter?.(item.id)}
+            >
+              <NavLink
+                className="header-menu__item"
+                prefetch="intent"
+                to={item.href}
+              >
+                {item.title}
+              </NavLink>
+            </div>
+          );
+        }
+
+        if (viewport === 'mobile' && item.links?.length) {
+          return (
+            <div key={item.id} className="header-menu__group">
+              <NavLink
+                className="header-menu__item header-menu__item--parent"
+                onClick={close}
+                prefetch="intent"
+                to={item.href}
+              >
+                {item.title}
+              </NavLink>
+              <div className="header-menu__children">
+                {item.links.map((link) => (
+                  <NavLink
+                    key={link.href}
+                    className="header-menu__item header-menu__item--child"
+                    onClick={close}
+                    prefetch="intent"
+                    to={link.href}
+                  >
+                    {link.label}
+                  </NavLink>
+                ))}
+              </div>
+            </div>
+          );
+        }
 
         return (
           <NavLink
@@ -131,8 +367,9 @@ export function HeaderMenu({
             end
             key={item.id}
             onClick={close}
+            onMouseEnter={() => onMegaEnter?.(null)}
             prefetch="intent"
-            to={url}
+            to={item.href}
           >
             {item.title}
           </NavLink>
@@ -195,7 +432,7 @@ function AccountLink({isLoggedIn}: Pick<HeaderProps, 'isLoggedIn'>) {
     >
       <Suspense fallback={<IconUser />}>
         <Await resolve={isLoggedIn} errorElement={<IconUser />}>
-          {() => <IconUser />}
+          {(loggedIn) => <IconUser loggedIn={Boolean(loggedIn)} />}
         </Await>
       </Suspense>
     </NavLink>
@@ -242,45 +479,3 @@ function CartBanner() {
   const cart = useOptimisticCart(originalCart);
   return <CartBadge count={cart?.totalQuantity ?? 0} />;
 }
-
-const FALLBACK_HEADER_MENU = {
-  id: 'gid://shopify/Menu/199655587896',
-  items: [
-    {
-      id: 'gid://shopify/MenuItem/461609500728',
-      resourceId: null,
-      tags: [],
-      title: 'Koleksiyonlar',
-      type: 'HTTP',
-      url: '/collections',
-      items: [],
-    },
-    {
-      id: 'gid://shopify/MenuItem/461609533496',
-      resourceId: null,
-      tags: [],
-      title: 'Blog',
-      type: 'HTTP',
-      url: '/blogs/journal',
-      items: [],
-    },
-    {
-      id: 'gid://shopify/MenuItem/461609566264',
-      resourceId: null,
-      tags: [],
-      title: 'Politikalar',
-      type: 'HTTP',
-      url: '/policies',
-      items: [],
-    },
-    {
-      id: 'gid://shopify/MenuItem/461609599032',
-      resourceId: 'gid://shopify/Page/92591030328',
-      tags: [],
-      title: 'Hakkımızda',
-      type: 'PAGE',
-      url: '/pages/about',
-      items: [],
-    },
-  ],
-};

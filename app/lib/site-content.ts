@@ -47,39 +47,37 @@ export const PRODUCT_PAGE = {
   },
 } as const;
 
+/** Core shop categories (Shopify collection handles). */
+export const CATEGORIES = [
+  {
+    name: 'Hırka',
+    href: '/collections/hirka',
+    image:
+      'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?auto=format&fit=crop&w=1200&q=80',
+  },
+  {
+    name: 'Tişört',
+    href: '/collections/tisort',
+    image:
+      'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=1200&q=80',
+  },
+  {
+    name: 'Triko',
+    href: '/collections/triko',
+    image:
+      'https://images.unsplash.com/photo-1576566588028-4147f3842f27?auto=format&fit=crop&w=1200&q=80',
+  },
+  {
+    name: 'Ceket',
+    href: '/collections/ceket',
+    image: '/hero.jpg',
+  },
+] as const;
+
 export const HOME_CATEGORIES = {
   title: 'Kategorilerimiz',
   items: [
-    {
-      name: 'T-Shirt',
-      href: '/collections/t-shirt',
-      image:
-        'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=800&q=80',
-    },
-    {
-      name: 'Sweatshirt',
-      href: '/collections/sweatshirt',
-      image:
-        'https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=800&q=80',
-    },
-    {
-      name: 'Şort',
-      href: '/collections/sort',
-      image:
-        'https://images.unsplash.com/photo-1591195853828-11db59a44f6b?auto=format&fit=crop&w=800&q=80',
-    },
-    {
-      name: 'Eşofman Altı',
-      href: '/collections/esofman-alti',
-      image:
-        'https://images.unsplash.com/photo-1552902865-b72c031ac5ea?auto=format&fit=crop&w=800&q=80',
-    },
-    {
-      name: 'Polo Yaka',
-      href: '/collections/polo-yaka',
-      image:
-        'https://images.unsplash.com/photo-1625910513413-c23b5806f9f0?auto=format&fit=crop&w=800&q=80',
-    },
+    ...CATEGORIES,
     {
       name: 'Aksesuar',
       href: '/collections/aksesuar',
@@ -88,6 +86,28 @@ export const HOME_CATEGORIES = {
     },
   ],
 } as const;
+
+/**
+ * Fallback header nav when Shopify `main-menu` is empty / unreachable.
+ * Prefer editing Online Store → Navigation → Main menu in Admin.
+ */
+export const HEADER_NAV = [
+  {
+    title: 'Koleksiyon',
+    href: '/collections/all',
+    image: CATEGORIES[0].image,
+    links: CATEGORIES.map((item) => ({
+      label: item.name,
+      href: item.href,
+    })),
+  },
+  {
+    title: 'İletişim',
+    href: '/pages/contact',
+    image: null as string | null,
+    links: null as {label: string; href: string}[] | null,
+  },
+] as const;
 
 export const HOME_DEPARTMENTS = [
   {
@@ -132,14 +152,10 @@ export const COLLECTION_BANNER = {
 export const FOOTER = {
   brand: {
     title: 'Taylan Wear',
-    links: [
-      {label: 'T-Shirt', href: '/collections/t-shirt'},
-      {label: 'Sweatshirt', href: '/collections/sweatshirt'},
-      {label: 'Şort', href: '/collections/sort'},
-      {label: 'Eşofman Altı', href: '/collections/esofman-alti'},
-      {label: 'Polo Yaka', href: '/collections/polo-yaka'},
-      {label: 'Aksesuar', href: '/collections/aksesuar'},
-    ],
+    links: CATEGORIES.map((item) => ({
+      label: item.name,
+      href: item.href,
+    })),
   },
   help: {
     title: 'Yardım',

@@ -6,7 +6,7 @@ import type {
 } from 'storefrontapi.generated';
 import {Aside, useAside} from '~/components/Aside';
 import {Footer} from '~/components/Footer';
-import {Header, HeaderMenu} from '~/components/Header';
+import {buildNavItems, Header, HeaderMenu} from '~/components/Header';
 import {TopBar} from '~/components/layout/TopBar';
 import {CartMain} from '~/components/CartMain';
 import {
@@ -49,7 +49,10 @@ export function PageLayout({
         <CartAside cart={cart} featuredProducts={featuredProducts} />
         <WishlistAside />
         <SearchAside featuredProducts={featuredProducts} />
-        <MobileMenuAside header={header} publicStoreDomain={publicStoreDomain} />
+        <MobileMenuAside
+          header={header}
+          publicStoreDomain={publicStoreDomain}
+        />
         <div className="site-header">
           <TopBar />
           {header ? (
@@ -246,17 +249,17 @@ function MobileMenuAside({
   header: PageLayoutProps['header'];
   publicStoreDomain: PageLayoutProps['publicStoreDomain'];
 }) {
+  const items = header
+    ? buildNavItems({
+        menu: header.menu,
+        publicStoreDomain,
+        primaryDomainUrl: header.shop.primaryDomain.url,
+      })
+    : undefined;
+
   return (
-    header.menu &&
-    header.shop.primaryDomain?.url && (
-      <Aside type="mobile" heading="Menü">
-        <HeaderMenu
-          menu={header.menu}
-          viewport="mobile"
-          primaryDomainUrl={header.shop.primaryDomain.url}
-          publicStoreDomain={publicStoreDomain}
-        />
-      </Aside>
-    )
+    <Aside type="mobile" heading="Menü">
+      <HeaderMenu viewport="mobile" items={items} />
+    </Aside>
   );
 }
