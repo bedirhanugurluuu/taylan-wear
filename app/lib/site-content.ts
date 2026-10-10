@@ -53,24 +53,30 @@ export const CATEGORIES = [
     name: 'Hırka',
     href: '/collections/hirka',
     image:
-      'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?auto=format&fit=crop&w=1200&q=80',
+      '/hirka.jpg',
   },
   {
     name: 'Tişört',
     href: '/collections/tisort',
     image:
-      'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=1200&q=80',
+      '/tisort.jpg',
+  },
+  {
+    name: 'Sweatshirt',
+    href: '/collections/sweatshirt',
+    image:
+      '/sweatshirt.jpg',
   },
   {
     name: 'Triko',
     href: '/collections/triko',
     image:
-      'https://images.unsplash.com/photo-1576566588028-4147f3842f27?auto=format&fit=crop&w=1200&q=80',
+      '/triko.jpg',
   },
   {
     name: 'Ceket',
     href: '/collections/ceket',
-    image: '/hero.jpg',
+    image: '/ceket.jpg',
   },
 ] as const;
 
