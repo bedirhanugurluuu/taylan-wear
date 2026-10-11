@@ -4,32 +4,6 @@ import type {MoneyV2} from '@shopify/hydrogen/storefront-api-types';
 import {WishlistToggleButton} from '~/components/Wishlist';
 
 const NEW_TAGS = ['yeni', 'new'];
-const COLOR_OPTION_NAMES = ['renk', 'color', 'colour'];
-const MAX_SWATCHES = 3;
-
-/** Fallback colors when no swatch is defined in Shopify admin */
-const COLOR_MAP: Record<string, string> = {
-  siyah: '#000000',
-  beyaz: '#ffffff',
-  gri: '#8a8a8a',
-  antrasit: '#3a3a3a',
-  lacivert: '#001f54',
-  mavi: '#1e6fd9',
-  kırmızı: '#d32f2f',
-  kirmizi: '#d32f2f',
-  bordo: '#7b1e2b',
-  yeşil: '#2e7d32',
-  yesil: '#2e7d32',
-  haki: '#6b6b47',
-  bej: '#d9c7a7',
-  krem: '#f1e9dd',
-  kahverengi: '#6d4c41',
-  pembe: '#e91e63',
-  mor: '#7b1fa2',
-  turuncu: '#f57c00',
-  sarı: '#fbc02d',
-  sari: '#fbc02d',
-};
 
 type ProductCardImage = {
   id: string | null;
@@ -67,13 +41,6 @@ export function ProductCard({
   const isNew = product.tags.some((tag) =>
     NEW_TAGS.includes(tag.trim().toLowerCase()),
   );
-
-  const colorOption = product.options.find((option) =>
-    COLOR_OPTION_NAMES.includes(option.name.trim().toLowerCase()),
-  );
-  const colorValues = colorOption?.optionValues ?? [];
-  const visibleColors = colorValues.slice(0, MAX_SWATCHES);
-  const remainingColors = colorValues.length - visibleColors.length;
 
   return (
     <Link
@@ -127,29 +94,6 @@ export function ProductCard({
           <Money data={product.priceRange.minVariantPrice} />
         </span>
       </div>
-
-      {visibleColors.length > 0 ? (
-        <div className="product-card__swatches" aria-label="Renk seçenekleri">
-          {visibleColors.map((value) => (
-            <span
-              key={value.name}
-              className="product-card__swatch"
-              title={value.name}
-              style={{
-                backgroundColor:
-                  value.swatch?.color ||
-                  COLOR_MAP[value.name.trim().toLowerCase()] ||
-                  '#d9d9d9',
-              }}
-            />
-          ))}
-          {remainingColors > 0 ? (
-            <span className="product-card__swatch-more">
-              +{remainingColors}
-            </span>
-          ) : null}
-        </div>
-      ) : null}
     </Link>
   );
 }

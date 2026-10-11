@@ -101,7 +101,7 @@ export const HEADER_NAV = [
   {
     title: 'Koleksiyon',
     href: '/collections/all',
-    image: CATEGORIES[0].image,
+    image: '/menu.jpg',
     links: CATEGORIES.map((item) => ({
       label: item.name,
       href: item.href,
@@ -140,7 +140,7 @@ export const HOME_FULL_BANNER = {
   href: '/collections/all',
   ctaLabel: 'İncele',
   image:
-    'https://images.unsplash.com/photo-1441984904996-e0b6921e2e3e?auto=format&fit=crop&w=2400&q=80',
+    '/hero-10.jpg',
   alt: 'Sezonun favorileri',
 } as const;
 
@@ -151,8 +151,44 @@ export const COLLECTION_BANNER = {
   ctaLabel: 'Keşfet',
   href: '/collections/all',
   image:
-    'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=2400&q=80',
+    '/hero-10.jpg',
   alt: 'Koleksiyon kampanyası',
+} as const;
+
+const CONTACT_PHONE = '+90 536 722 27 93';
+const CONTACT_ADDRESS = 'Akşemsettin, Selimpaşa Sk. 17A, Eyüpsultan/İstanbul';
+const CONTACT_EMAIL = 'taylanwear@gmail.com';
+
+export const CONTACT_PAGE = {
+  title: 'İletişim',
+  eyebrow: 'Taylan Wear',
+  intro:
+    'Sipariş, iade veya koleksiyon hakkında soruların için buradayız. Mesajını bırak, en kısa sürede dönüş yapalım.',
+  email: CONTACT_EMAIL,
+  phone: CONTACT_PHONE,
+  address: CONTACT_ADDRESS,
+  hours: [
+    {label: 'Hafta içi', value: '10:00 – 18:00'},
+    {label: 'Cumartesi', value: '10:00 – 16:00'},
+    {label: 'Pazar', value: '10:00 – 16:00'},
+  ],
+  form: {
+    title: 'Mesaj gönder',
+    text: 'Formu doldurduktan sonra e-posta uygulaman açılır. Dilersen doğrudan yazabilirsin.',
+    nameLabel: 'Ad Soyad',
+    emailLabel: 'E-posta',
+    subjectLabel: 'Konu',
+    messageLabel: 'Mesaj',
+    submitLabel: 'Gönder',
+    subjects: ['Sipariş', 'İade & Değişim', 'Ürün sorusu', 'İş birliği', 'Diğer'],
+  },
+  social: {
+    title: 'Sosyal',
+    links: [
+      {label: 'Instagram', href: 'https://instagram.com/'},
+      {label: 'Shopier', href: 'https://www.shopier.com/'},
+    ],
+  },
 } as const;
 
 export const FOOTER = {
@@ -179,8 +215,8 @@ export const FOOTER = {
     placeholder: 'E-posta adresiniz',
   },
   contact: {
-    address: 'İstanbul, Türkiye',
-    phone: '+90 555 000 00 00',
+    address: CONTACT_ADDRESS,
+    phone: CONTACT_PHONE,
   },
   social: {
     instagram: 'https://instagram.com/',

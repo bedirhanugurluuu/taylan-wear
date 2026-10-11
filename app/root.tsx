@@ -23,6 +23,7 @@ import resetStylesInline from '~/styles/reset.css?inline';
 import appStyles from '~/styles/app.css?url';
 import tailwindCss from './styles/tailwind.css?url';
 import {PageLayout} from './components/PageLayout';
+import {JudgemeScripts} from '~/components/judgeme/JudgemeScripts';
 
 export type RootLoader = typeof loader;
 
@@ -81,6 +82,11 @@ export async function loader(args: Route.LoaderArgs) {
 
   const {storefront, env} = args.context;
 
+  const judgemeShopDomain =
+    env.JUDGEME_SHOP_DOMAIN || env.PUBLIC_STORE_DOMAIN || '';
+  const judgemePublicToken = env.JUDGEME_PUBLIC_TOKEN || '';
+  const judgemeCdnHost = env.JUDGEME_CDN_HOST || 'https://cdn.judge.me';
+
   return {
     ...deferredData,
     ...criticalData,
@@ -100,6 +106,15 @@ export async function loader(args: Route.LoaderArgs) {
       country: args.context.storefront.i18n.country,
       language: args.context.storefront.i18n.language,
     },
+    judgeme:
+      judgemeShopDomain && judgemePublicToken
+        ? {
+            shopDomain: judgemeShopDomain,
+            publicToken: judgemePublicToken,
+            cdnHost: judgemeCdnHost,
+            delay: 500,
+          }
+        : null,
   };
 }
 
@@ -246,6 +261,7 @@ export default function App() {
 
   return (
     <AppShell data={data}>
+      <JudgemeScripts config={data.judgeme} />
       <Outlet />
     </AppShell>
   );

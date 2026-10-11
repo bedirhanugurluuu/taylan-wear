@@ -77,7 +77,9 @@ export function Aside({
             ×
           </button>
         </header>
-        <div className="aside-panel__body">{children}</div>
+        {/* Only mount panel content while open — avoids hidden product
+            images / route prefetch firing on unrelated pages. */}
+        <div className="aside-panel__body">{expanded ? children : null}</div>
       </aside>
     </div>
   );

@@ -30,10 +30,12 @@ interface HeaderProps {
 
 type Viewport = 'desktop' | 'mobile';
 
+const MENU_IMAGE = '/menu.jpg';
+
 type NavLinkItem = {
   label: string;
   href: string;
-  image?: string | null;
+  image: string | null;
 };
 
 type NavItem = {
@@ -77,63 +79,48 @@ export function buildNavItems({
   primaryDomainUrl: string;
 }): NavItem[] {
   if (menu?.items?.length) {
-    return menu.items
-      .map((item) => {
-        if (!item.url) return null;
+    const items: NavItem[] = [];
 
-        const href = toPathname(
-          item.url,
-          publicStoreDomain,
-          primaryDomainUrl,
-        );
-        const childLinks =
-          item.items?.length > 0
-            ? item.items
-                .filter((child) => Boolean(child.url))
-                .map((child) => {
-                  const childHref = toPathname(
-                    child.url,
-                    publicStoreDomain,
-                    primaryDomainUrl,
-                  );
-                  const childImage =
-                    child.resource &&
-                    'image' in child.resource &&
-                    child.resource.image?.url
-                      ? child.resource.image.url
-                      : imageForHref(childHref);
+    for (const item of menu.items) {
+      if (!item.url) continue;
 
-                  return {
-                    label: child.title,
-                    href: childHref,
-                    image: childImage,
-                  };
-                })
-            : null;
+      const href = toPathname(item.url, publicStoreDomain, primaryDomainUrl);
+      const childLinks: NavLinkItem[] | null =
+        item.items?.length > 0
+          ? item.items
+              .filter((child) => Boolean(child.url))
+              .map((child) => {
+                const childHref = toPathname(
+                  child.url,
+                  publicStoreDomain,
+                  primaryDomainUrl,
+                );
 
-        const parentImage =
-          item.resource &&
-          'image' in item.resource &&
-          item.resource.image?.url
-            ? item.resource.image.url
-            : childLinks?.[0]?.image ?? imageForHref(href);
+                return {
+                  label: child.title,
+                  href: childHref,
+                  image: imageForHref(childHref),
+                };
+              })
+          : null;
 
-        return {
-          id: item.id,
-          title: item.title,
-          href,
-          image: parentImage,
-          links: childLinks,
-        } satisfies NavItem;
-      })
-      .filter((item): item is NavItem => Boolean(item));
+      items.push({
+        id: item.id,
+        title: item.title,
+        href,
+        image: childLinks?.length ? MENU_IMAGE : null,
+        links: childLinks,
+      });
+    }
+
+    return items;
   }
 
   return HEADER_NAV.map((item) => ({
     id: item.href,
     title: item.title,
     href: item.href,
-    image: item.image,
+    image: item.links?.length ? MENU_IMAGE : null,
     links: item.links
       ? item.links.map((link) => ({
           label: link.label,
@@ -254,7 +241,7 @@ export function Header({
                     src={megaItem.image}
                     alt={megaItem.title}
                     width={720}
-                    height={900}
+                    height={960}
                     loading="lazy"
                     decoding="async"
                   />

@@ -19,12 +19,54 @@ export default async function handleRequest(
       checkoutDomain: context.env.PUBLIC_CHECKOUT_DOMAIN,
       storeDomain: context.env.PUBLIC_STORE_DOMAIN,
     },
-    // Inter font stylesheet + files (blocked without these)
-    styleSrc: ['https://fonts.googleapis.com'],
+    // Custom lists replace Hydrogen defaults — keep Shopify/Vite + Judge.me.
+    scriptSrc: [
+      "'self'",
+      'https://cdn.shopify.com',
+      'https://cdn.judge.me',
+      'https://cdnwidget.judge.me',
+      'https://cache.judge.me',
+      'https://judge.me',
+    ],
+    styleSrc: [
+      'https://fonts.googleapis.com',
+      'https://cdn.shopify.com',
+      'https://cdn.judge.me',
+      'https://cdnwidget.judge.me',
+      'https://judge.me',
+    ],
     fontSrc: [
       "'self'",
+      'data:',
       'https://fonts.gstatic.com',
       'https://cdn.shopify.com',
+      'https://cdn.judge.me',
+      'https://cdnwidget.judge.me',
+    ],
+    connectSrc: [
+      'https://cdn.judge.me',
+      'https://cdnwidget.judge.me',
+      'https://cache.judge.me',
+      'https://judge.me',
+      'https://api.judge.me',
+    ],
+    imgSrc: [
+      "'self'",
+      'data:',
+      'blob:',
+      'https://cdn.shopify.com',
+      'https://shopify.com',
+      'https://images.unsplash.com',
+      'https://cdn.judge.me',
+      'https://cdnwidget.judge.me',
+      'https://judge.me',
+      'https://cache.judge.me',
+    ],
+    frameSrc: [
+      'https://judge.me',
+      'https://cdn.judge.me',
+      'https://cdnwidget.judge.me',
+      'https://cache.judge.me',
     ],
   });
 

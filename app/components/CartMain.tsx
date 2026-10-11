@@ -127,7 +127,7 @@ function CartEmpty({
           className="cart-empty__cta"
           to="/collections/all"
           onClick={close}
-          prefetch="viewport"
+          prefetch="intent"
         >
           Alışverişe devam et
         </Link>

@@ -14,6 +14,23 @@ export type CollectionFilter = {
   values: CollectionFilterValue[];
 };
 
+/** Hide brand/vendor filters — single-brand storefront. */
+export function isBrandFilter(filter: Pick<CollectionFilter, 'id' | 'label'>) {
+  const id = filter.id.toLowerCase();
+  const label = filter.label.toLowerCase();
+  return (
+    id.includes('vendor') ||
+    id.includes('brand') ||
+    label === 'marka' ||
+    label === 'brand' ||
+    label === 'vendor'
+  );
+}
+
+export function withoutBrandFilters(filters: CollectionFilter[]) {
+  return filters.filter((filter) => !isBrandFilter(filter));
+}
+
 export const SORT_OPTIONS = [
   {label: 'Öne çıkanlar', value: 'manual'},
   {label: 'En yeni', value: 'created-desc'},

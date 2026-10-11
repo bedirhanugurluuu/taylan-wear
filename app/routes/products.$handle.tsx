@@ -22,6 +22,8 @@ import {WishlistToggleButton} from '~/components/Wishlist';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
 import {PRODUCT_PAGE} from '~/lib/site-content';
 import {getColorSiblingSwatches} from '~/lib/color-siblings';
+import {ProductReviewBadge} from '~/components/judgeme/ProductReviews';
+import {fetchJudgemeProductWidgets} from '~/lib/judgeme.server';
 
 export const meta: Route.MetaFunction = ({data}) => {
   return [
@@ -35,8 +37,14 @@ export const meta: Route.MetaFunction = ({data}) => {
 
 export async function loader(args: Route.LoaderArgs) {
   const criticalData = await loadCriticalData(args);
+  const judgeme = await fetchJudgemeProductWidgets(
+    args.context.env,
+    criticalData.product.handle,
+  );
+
   return {
     ...criticalData,
+    judgeme,
     relatedProducts: loadRelatedProducts(args.context, criticalData.product.id),
   };
 }
@@ -99,7 +107,7 @@ function getMetafieldText(
 }
 
 export default function Product() {
-  const {product, relatedProducts} = useLoaderData<typeof loader>();
+  const {product, relatedProducts, judgeme} = useLoaderData<typeof loader>();
   const [infoOpen, setInfoOpen] = useState(false);
   const [infoTab, setInfoTab] = useState<ProductInfoTabId>('details');
 
@@ -197,6 +205,8 @@ export default function Product() {
             />
           </div>
 
+          <ProductReviewBadge productId={product.id} html={judgeme?.badgeHtml} />
+
           <ProductForm
             productOptions={productOptions}
             selectedVariant={selectedVariant}
@@ -214,6 +224,10 @@ export default function Product() {
         initialTab={infoTab}
         title={title}
         content={infoContent}
+        reviews={{
+          productId: product.id,
+          html: judgeme?.widgetHtml,
+        }}
         onClose={() => setInfoOpen(false)}
       />
 

@@ -16,6 +16,7 @@ import {
   getAppliedFilters,
   getSortFromParam,
   type CollectionFilter,
+  withoutBrandFilters,
 } from '~/lib/collection-filters';
 
 export const meta: Route.MetaFunction = ({data}) => {
@@ -68,7 +69,9 @@ async function loadCriticalData({context, params, request}: Route.LoaderArgs) {
 
 export default function Collection() {
   const {collection} = useLoaderData<typeof loader>();
-  const filters = (collection.products.filters ?? []) as CollectionFilter[];
+  const filters = withoutBrandFilters(
+    (collection.products.filters ?? []) as CollectionFilter[],
+  );
   const products = collection.products.nodes as unknown as ProductCardProduct[];
   const productCountLabel = `${collection.products.nodes.length}${
     collection.products.pageInfo.hasNextPage ? '+' : ''
