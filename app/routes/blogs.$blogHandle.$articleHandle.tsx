@@ -1,10 +1,19 @@
 import {useLoaderData} from 'react-router';
 import type {Route} from './+types/blogs.$blogHandle.$articleHandle';
 import {Image} from '@shopify/hydrogen';
+import {JsonLd} from '~/components/seo/JsonLd';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
+import {
+  buildArticleJsonLd,
+  buildBreadcrumbJsonLd,
+  buildSeoMeta,
+  originFromRequest,
+  stripHtml,
+  truncate,
+} from '~/lib/seo';
 
 export const meta: Route.MetaFunction = ({data}) => {
-  return [{title: `Taylan Wear | ${data?.article.title ?? 'Yazı'}`}];
+  return buildSeoMeta(data?.seo);
 };
 
 export async function loader(args: Route.LoaderArgs) {
@@ -13,8 +22,43 @@ export async function loader(args: Route.LoaderArgs) {
 
   // Await the critical data required to render initial state of the page
   const criticalData = await loadCriticalData(args);
+  const origin = originFromRequest(args.request);
+  const {article, blogHandle} = criticalData;
+  const path = `/blogs/${blogHandle}/${article.handle}`;
+  const description =
+    article.seo?.description ||
+    truncate(stripHtml(article.contentHtml), 160) ||
+    article.title;
 
-  return {...deferredData, ...criticalData};
+  return {
+    ...deferredData,
+    ...criticalData,
+    seo: {
+      origin,
+      path,
+      title: article.seo?.title || article.title,
+      description,
+      image: article.image?.url,
+      imageAlt: article.image?.altText || article.title,
+      type: 'article' as const,
+    },
+    jsonLd: [
+      buildArticleJsonLd({
+        origin,
+        title: article.title,
+        description,
+        path,
+        image: article.image?.url,
+        publishedAt: article.publishedAt,
+        author: article.author?.name,
+      }),
+      buildBreadcrumbJsonLd(origin, [
+        {name: 'Ana sayfa', path: '/'},
+        {name: 'Blog', path: `/blogs/${blogHandle}`},
+        {name: article.title, path},
+      ]),
+    ].filter(Boolean),
+  };
 }
 
 /**
@@ -53,7 +97,7 @@ async function loadCriticalData({context, request, params}: Route.LoaderArgs) {
 
   const article = blog.articleByHandle;
 
-  return {article};
+  return {article, blogHandle};
 }
 
 /**
@@ -66,7 +110,7 @@ function loadDeferredData({context}: Route.LoaderArgs) {
 }
 
 export default function Article() {
-  const {article} = useLoaderData<typeof loader>();
+  const {article, jsonLd} = useLoaderData<typeof loader>();
   const {title, image, contentHtml, author} = article;
 
   const publishedDate = new Intl.DateTimeFormat('tr-TR', {
@@ -76,21 +120,27 @@ export default function Article() {
   }).format(new Date(article.publishedAt));
 
   return (
-    <div className="article">
-      <h1>
-        {title}
-        <div>
-          <time dateTime={article.publishedAt}>{publishedDate}</time> &middot;{' '}
-          <address>{author?.name}</address>
-        </div>
-      </h1>
+    <article className="article">
+      <JsonLd data={jsonLd} />
+      <header>
+        <h1>{title}</h1>
+        <p>
+          <time dateTime={article.publishedAt}>{publishedDate}</time>
+          {author?.name ? (
+            <>
+              {' '}
+              &middot; <span>{author.name}</span>
+            </>
+          ) : null}
+        </p>
+      </header>
 
       {image && <Image data={image} sizes="90vw" loading="eager" />}
       <div
         dangerouslySetInnerHTML={{__html: contentHtml}}
-        className="article"
+        className="article__body"
       />
-    </div>
+    </article>
   );
 }
 

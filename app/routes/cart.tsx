@@ -4,8 +4,15 @@ import type {CartQueryDataReturn} from '@shopify/hydrogen';
 import {CartForm} from '@shopify/hydrogen';
 import {CartMain} from '~/components/CartMain';
 
+import {buildSeoMeta} from '~/lib/seo';
+
 export const meta: Route.MetaFunction = () => {
-  return [{title: 'Taylan Wear | Sepet'}];
+  return buildSeoMeta({
+    path: '/cart',
+    title: 'Sepet',
+    description: 'Alışveriş sepetin.',
+    noindex: true,
+  });
 };
 
 export const headers: HeadersFunction = ({actionHeaders}) => actionHeaders;

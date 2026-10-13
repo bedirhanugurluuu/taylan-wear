@@ -4,8 +4,15 @@ import {getPaginationVariables, Image} from '@shopify/hydrogen';
 import type {CollectionFragment} from 'storefrontapi.generated';
 import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
 
-export const meta: Route.MetaFunction = () => {
-  return [{title: 'Taylan Wear | Koleksiyonlar'}];
+import {JsonLd} from '~/components/seo/JsonLd';
+import {
+  buildBreadcrumbJsonLd,
+  buildSeoMeta,
+  originFromRequest,
+} from '~/lib/seo';
+
+export const meta: Route.MetaFunction = ({data}) => {
+  return buildSeoMeta(data?.seo);
 };
 
 export async function loader(args: Route.LoaderArgs) {
@@ -14,8 +21,25 @@ export async function loader(args: Route.LoaderArgs) {
 
   // Await the critical data required to render initial state of the page
   const criticalData = await loadCriticalData(args);
+  const origin = originFromRequest(args.request);
 
-  return {...deferredData, ...criticalData};
+  return {
+    ...deferredData,
+    ...criticalData,
+    seo: {
+      origin,
+      path: '/collections',
+      title: 'Koleksiyonlar',
+      description:
+        'Taylan Wear koleksiyonlarını keşfet. Hırka, tişört, sweatshirt, triko, ceket ve daha fazlası.',
+    },
+    jsonLd: [
+      buildBreadcrumbJsonLd(origin, [
+        {name: 'Ana sayfa', path: '/'},
+        {name: 'Koleksiyonlar', path: '/collections'},
+      ]),
+    ].filter(Boolean),
+  };
 }
 
 /**
@@ -47,10 +71,11 @@ function loadDeferredData({context}: Route.LoaderArgs) {
 }
 
 export default function Collections() {
-  const {collections} = useLoaderData<typeof loader>();
+  const {collections, jsonLd} = useLoaderData<typeof loader>();
 
   return (
     <div className="collections">
+      <JsonLd data={jsonLd} />
       <h1>Koleksiyonlar</h1>
       <PaginatedResourceSection<CollectionFragment>
         connection={collections}

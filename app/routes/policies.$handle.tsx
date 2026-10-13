@@ -7,11 +7,13 @@ type SelectedPolicies = keyof Pick<
   'privacyPolicy' | 'shippingPolicy' | 'termsOfService' | 'refundPolicy'
 >;
 
+import {buildSeoMeta, originFromRequest, stripHtml, truncate} from '~/lib/seo';
+
 export const meta: Route.MetaFunction = ({data}) => {
-  return [{title: `Taylan Wear | ${data?.policy.title ?? 'Politika'}`}];
+  return buildSeoMeta(data?.seo);
 };
 
-export async function loader({params, context}: Route.LoaderArgs) {
+export async function loader({params, context, request}: Route.LoaderArgs) {
   if (!params.handle) {
     throw new Response('Politika belirtilmedi', {status: 404});
   }
@@ -38,7 +40,20 @@ export async function loader({params, context}: Route.LoaderArgs) {
     throw new Response('Politika bulunamadı', {status: 404});
   }
 
-  return {policy};
+  const origin = originFromRequest(request);
+  const path = `/policies/${params.handle}`;
+
+  return {
+    policy,
+    seo: {
+      origin,
+      path,
+      title: policy.title,
+      description:
+        truncate(stripHtml(policy.body), 160) || `${policy.title} — Taylan Wear`,
+      noindex: true,
+    },
+  };
 }
 
 export default function Policy() {

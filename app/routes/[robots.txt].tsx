@@ -45,6 +45,27 @@ Crawl-Delay: 10
 
 User-agent: Pinterest
 Crawl-delay: 1
+
+# AI / LLM crawlers — allow public catalog pages
+User-agent: GPTBot
+Allow: /
+${generalDisallowRules({sitemapUrl})}
+
+User-agent: ChatGPT-User
+Allow: /
+${generalDisallowRules({sitemapUrl})}
+
+User-agent: Google-Extended
+Allow: /
+${generalDisallowRules({sitemapUrl})}
+
+User-agent: ClaudeBot
+Allow: /
+${generalDisallowRules({sitemapUrl})}
+
+User-agent: anthropic-ai
+Allow: /
+${generalDisallowRules({sitemapUrl})}
 `.trim();
 }
 

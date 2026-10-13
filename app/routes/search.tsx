@@ -13,10 +13,19 @@ import type {
   PredictiveSearchQuery,
 } from 'storefrontapi.generated';
 
+import {buildSeoMeta} from '~/lib/seo';
+
 export const meta: Route.MetaFunction = ({data}) => {
   const term =
     data && 'term' in data && typeof data.term === 'string' ? data.term : '';
-  return [{title: term ? `Taylan Wear | Ara: ${term}` : 'Taylan Wear | Ara'}];
+  return buildSeoMeta({
+    path: '/search',
+    title: term ? `Ara: ${term}` : 'Ara',
+    description: term
+      ? `“${term}” için arama sonuçları.`
+      : 'Taylan Wear ürün arama.',
+    noindex: true,
+  });
 };
 
 export async function loader({request, context}: Route.LoaderArgs) {

@@ -19,7 +19,7 @@ export function CollectionBanner() {
       </div>
 
       <div className="collection-banner__content">
-        <h2 className="collection-banner__title">{banner.title}</h2>
+        <p className="collection-banner__title">{banner.title}</p>
         {banner.text ? (
           <p className="collection-banner__text">{banner.text}</p>
         ) : null}

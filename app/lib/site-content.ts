@@ -3,6 +3,53 @@
  * Edit here when you need text changes.
  */
 
+export const SITE_SEO = {
+  name: 'Taylan Wear',
+  locale: 'tr_TR',
+  defaultDescription:
+    'Taylan Wear — sade kesimler, günlük ritmine uyan parçalar. Hırka, tişört, sweatshirt, triko ve ceket koleksiyonlarını keşfet.',
+  defaultOgImage: '/hero.jpg',
+  logo: '/favicon.svg',
+  email: 'taylanwear@gmail.com',
+  phone: '+90 536 722 27 93',
+  address: 'Akşemsettin, Selimpaşa Sk. 17A, Eyüpsultan/İstanbul',
+  sameAs: [
+    'https://instagram.com/',
+    'https://www.shopier.com/',
+  ] as string[],
+  /** Short LLM/SEO copy under category pages (handle → content). */
+  collectionCopy: {
+    hirka: {
+      heading: 'Hırka modelleri',
+      body: 'Taylan Wear hırka koleksiyonu; katmanlı kombinler ve günlük kullanım için dengeli kalınlıkta parçalar sunar. Sade renkler ve rahat kesimler ile ofisten hafta sonuna kolayca geçiş yapabilirsin.',
+    },
+    tisort: {
+      heading: 'Tişört modelleri',
+      body: 'Temel tişörtlerden sezonluk parçalara uzanan Taylan Wear tişört koleksiyonu; nefes alan kumaşlar ve sade kalıplarla gardırobunun omurgasını oluşturur.',
+    },
+    sweatshirt: {
+      heading: 'Sweatshirt modelleri',
+      body: 'Sweatshirt koleksiyonumuz; yumuşak doku, rahat kalıp ve şehir temposuna uygun parçalarla öne çıkar. Tek başına veya katmanlı kombinlerde kullanıma hazırdır.',
+    },
+    triko: {
+      heading: 'Triko modelleri',
+      body: 'Triko seçkimiz; mevsim geçişlerinde sıcak tutan, sade ve zamansız kesimleri bir araya getirir. Günlük kombinlere kolay eklenen parçalar bulabilirsin.',
+    },
+    ceket: {
+      heading: 'Ceket modelleri',
+      body: 'Ceket ve dış giyim koleksiyonu; net silüetler ve fonksiyonel detaylarla tamamlanır. Katmansız veya katmanlı kombinlerde öne çıkan parçalar sunar.',
+    },
+    aksesuar: {
+      heading: 'Aksesuarlar',
+      body: 'Aksesuar koleksiyonumuz; kıyafetlerini tamamlayan sade ve kullanışlı parçalarla stilini tamamlamana yardımcı olur.',
+    },
+    all: {
+      heading: 'Tüm ürünler',
+      body: 'Taylan Wear’ın tüm koleksiyonunu tek yerde incele. Yeni sezon parçalar, temel ürünler ve günlük kullanıma uygun modeller arasından seçim yap.',
+    },
+  } as Record<string, {heading: string; body: string}>,
+} as const;
+
 export const TOP_BAR = {
   left: {
     text: 'Koleksiyonumuza bak',
@@ -16,20 +63,6 @@ export const TOP_BAR = {
 
 export const PRODUCT_PAGE = {
   freeShippingNote: '1500₺ ve üzeri siparişlerde ücretsiz kargo',
-  /** Shared across all products (edit here) */
-  sizeGuide: {
-    title: 'Nasıl ölçülür?',
-    intro:
-      'En doğru bedeni seçmek için aşağıdaki ölçü tablosunu kullanabilirsin.',
-    rows: [
-      {size: 'XS', chest: '86–90', waist: '70–74', hip: '88–92'},
-      {size: 'S', chest: '90–94', waist: '74–78', hip: '92–96'},
-      {size: 'M', chest: '94–98', waist: '78–82', hip: '96–100'},
-      {size: 'L', chest: '98–102', waist: '82–86', hip: '100–104'},
-      {size: 'XL', chest: '102–106', waist: '86–90', hip: '104–108'},
-    ],
-    note: 'Ölçüler cm cinsindendir. Şüphen varsa bir beden büyük tercih edebilirsin.',
-  },
   /** Shared across all products (edit here) */
   returns: {
     title: 'İade & Değişim',

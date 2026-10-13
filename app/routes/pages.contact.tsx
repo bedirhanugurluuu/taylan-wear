@@ -1,15 +1,58 @@
 import {type FormEvent, useState} from 'react';
-import {Link} from 'react-router';
-import {CONTACT_PAGE} from '~/lib/site-content';
+import {Link, useLoaderData} from 'react-router';
+import type {Route} from './+types/pages.contact';
+import {JsonLd} from '~/components/seo/JsonLd';
+import {
+  buildBreadcrumbJsonLd,
+  buildSeoMeta,
+  originFromRequest,
+} from '~/lib/seo';
+import {CONTACT_PAGE, SITE_SEO} from '~/lib/site-content';
 
-export const meta = () => {
-  return [
-    {title: 'Taylan Wear | İletişim'},
-    {name: 'description', content: CONTACT_PAGE.intro},
-  ];
+export const meta: Route.MetaFunction = ({data}) => {
+  return buildSeoMeta(data?.seo);
 };
 
+export async function loader({request}: Route.LoaderArgs) {
+  const origin = originFromRequest(request);
+  const path = '/pages/contact';
+
+  return {
+    seo: {
+      origin,
+      path,
+      title: CONTACT_PAGE.title,
+      description: CONTACT_PAGE.intro,
+    },
+    jsonLd: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'ContactPage',
+        name: CONTACT_PAGE.title,
+        description: CONTACT_PAGE.intro,
+        url: `${origin}${path}`,
+        mainEntity: {
+          '@type': 'Organization',
+          name: SITE_SEO.name,
+          email: CONTACT_PAGE.email,
+          telephone: CONTACT_PAGE.phone,
+          address: {
+            '@type': 'PostalAddress',
+            streetAddress: CONTACT_PAGE.address,
+            addressCountry: 'TR',
+          },
+        },
+      },
+      buildBreadcrumbJsonLd(origin, [
+        {name: 'Ana sayfa', path: '/'},
+        {name: CONTACT_PAGE.title, path},
+      ]),
+    ].filter(Boolean),
+  };
+}
+
 export default function ContactPage() {
+  const {jsonLd} = useLoaderData<typeof loader>();
   const page = CONTACT_PAGE;
   const [sentHint, setSentHint] = useState(false);
 
@@ -32,6 +75,7 @@ export default function ContactPage() {
 
   return (
     <div className="contact-page">
+      <JsonLd data={jsonLd} />
       <header className="contact-page__hero">
         <p className="contact-page__eyebrow">{page.eyebrow}</p>
         <h1 className="contact-page__title">{page.title}</h1>
@@ -39,27 +83,25 @@ export default function ContactPage() {
       </header>
 
       <div className="contact-page__grid">
-        <section className="contact-page__info" aria-label="İletişim bilgileri">
+        <section className="contact-page__details" aria-label="İletişim bilgileri">
           <div className="contact-page__block">
-            <h2 className="contact-page__heading">Bize ulaş</h2>
-            <ul className="contact-page__list">
-              <li>
-                <span className="contact-page__label">E-posta</span>
-                <a href={`mailto:${page.email}`}>{page.email}</a>
-              </li>
-              <li>
-                <span className="contact-page__label">Telefon</span>
-                <a href={`tel:${page.phone.replace(/\s/g, '')}`}>{page.phone}</a>
-              </li>
-              <li>
-                <span className="contact-page__label">Adres</span>
-                <span>{page.address}</span>
-              </li>
-            </ul>
+            <h2 className="contact-page__block-title">Adres</h2>
+            <p className="contact-page__block-text">{page.address}</p>
           </div>
-
           <div className="contact-page__block">
-            <h2 className="contact-page__heading">Çalışma saatleri</h2>
+            <h2 className="contact-page__block-title">Telefon</h2>
+            <p className="contact-page__block-text">
+              <a href={`tel:${page.phone.replace(/\s/g, '')}`}>{page.phone}</a>
+            </p>
+          </div>
+          <div className="contact-page__block">
+            <h2 className="contact-page__block-title">E-posta</h2>
+            <p className="contact-page__block-text">
+              <a href={`mailto:${page.email}`}>{page.email}</a>
+            </p>
+          </div>
+          <div className="contact-page__block">
+            <h2 className="contact-page__block-title">Çalışma saatleri</h2>
             <ul className="contact-page__hours">
               {page.hours.map((item) => (
                 <li key={item.label}>
@@ -69,52 +111,35 @@ export default function ContactPage() {
               ))}
             </ul>
           </div>
-
           <div className="contact-page__block">
-            <h2 className="contact-page__heading">{page.social.title}</h2>
-            <div className="contact-page__social">
+            <h2 className="contact-page__block-title">{page.social.title}</h2>
+            <ul className="contact-page__social">
               {page.social.links.map((link) => (
-                <a
-                  key={link.label}
-                  href={link.href}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  {link.label}
-                </a>
+                <li key={link.label}>
+                  <a href={link.href} target="_blank" rel="noreferrer">
+                    {link.label}
+                  </a>
+                </li>
               ))}
-            </div>
+            </ul>
           </div>
-
-          <p className="contact-page__note">
-            Sipariş ve iade süreçleri için{' '}
-            <Link to="/policies/shipping-policy">Kargo</Link> ve{' '}
-            <Link to="/policies/refund-policy">İade & Değişim</Link>{' '}
-            politikalarına da bakabilirsin.
-          </p>
         </section>
 
-        <section className="contact-page__form-panel" aria-label="İletişim formu">
-          <h2 className="contact-page__heading">{page.form.title}</h2>
+        <section className="contact-page__form-wrap" aria-labelledby="contact-form-title">
+          <h2 id="contact-form-title" className="contact-page__form-title">
+            {page.form.title}
+          </h2>
           <p className="contact-page__form-text">{page.form.text}</p>
-
-          <form className="contact-form" onSubmit={onSubmit}>
-            <label className="contact-form__field">
+          <form className="contact-page__form" onSubmit={onSubmit}>
+            <label className="contact-page__field">
               <span>{page.form.nameLabel}</span>
-              <input name="name" type="text" autoComplete="name" required />
+              <input name="name" type="text" required autoComplete="name" />
             </label>
-
-            <label className="contact-form__field">
+            <label className="contact-page__field">
               <span>{page.form.emailLabel}</span>
-              <input
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-              />
+              <input name="email" type="email" required autoComplete="email" />
             </label>
-
-            <label className="contact-form__field">
+            <label className="contact-page__field">
               <span>{page.form.subjectLabel}</span>
               <select name="subject" required defaultValue={page.form.subjects[0]}>
                 {page.form.subjects.map((subject) => (
@@ -124,22 +149,23 @@ export default function ContactPage() {
                 ))}
               </select>
             </label>
-
-            <label className="contact-form__field">
+            <label className="contact-page__field">
               <span>{page.form.messageLabel}</span>
               <textarea name="message" rows={6} required />
             </label>
-
-            <button type="submit" className="contact-form__submit">
+            <button type="submit" className="contact-page__submit">
               {page.form.submitLabel}
             </button>
-
             {sentHint ? (
-              <p className="contact-form__hint" role="status">
-                E-posta uygulaman açılıyor…
+              <p className="contact-page__hint">
+                E-posta uygulaman açılmazsa{' '}
+                <a href={`mailto:${page.email}`}>{page.email}</a> adresine yaz.
               </p>
             ) : null}
           </form>
+          <p className="contact-page__back">
+            <Link to="/">Ana sayfaya dön</Link>
+          </p>
         </section>
       </div>
     </div>

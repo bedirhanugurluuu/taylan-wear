@@ -255,6 +255,61 @@ export function Header({
   );
 }
 
+function MobileMenuAuthButtons({onNavigate}: {onNavigate: () => void}) {
+  return (
+    <div className="mobile-menu-auth">
+      <NavLink
+        to="/account/login"
+        prefetch="intent"
+        className="mobile-menu-auth__btn"
+        onClick={onNavigate}
+      >
+        Giriş Yap
+      </NavLink>
+      <NavLink
+        to="/account/login"
+        prefetch="intent"
+        className="mobile-menu-auth__btn mobile-menu-auth__btn--ghost"
+        onClick={onNavigate}
+      >
+        Kayıt Ol
+      </NavLink>
+    </div>
+  );
+}
+
+export function MobileMenuHeading({
+  isLoggedIn,
+}: {
+  isLoggedIn: Promise<boolean>;
+}) {
+  const {close} = useAside();
+
+  return (
+    <Suspense fallback={<MobileMenuAuthButtons onNavigate={close} />}>
+      <Await
+        resolve={isLoggedIn}
+        errorElement={<MobileMenuAuthButtons onNavigate={close} />}
+      >
+        {(loggedIn) =>
+          loggedIn ? (
+            <NavLink
+              to="/account"
+              prefetch="intent"
+              className="mobile-menu-auth__account"
+              onClick={close}
+            >
+              Hesabım
+            </NavLink>
+          ) : (
+            <MobileMenuAuthButtons onNavigate={close} />
+          )
+        }
+      </Await>
+    </Suspense>
+  );
+}
+
 export function HeaderMenu({
   items,
   viewport,
@@ -375,7 +430,9 @@ function HeaderCtas({
       <SearchToggle />
       <HeaderWishlistButton />
       <CartToggle cart={cart} />
-      <AccountLink isLoggedIn={isLoggedIn} />
+      <span className="header__cta--desktop">
+        <AccountLink isLoggedIn={isLoggedIn} />
+      </span>
       <HeaderMenuMobileToggle />
     </nav>
   );

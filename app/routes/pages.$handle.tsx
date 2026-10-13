@@ -1,9 +1,17 @@
 import {useLoaderData} from 'react-router';
 import type {Route} from './+types/pages.$handle';
+import {JsonLd} from '~/components/seo/JsonLd';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
+import {
+  buildBreadcrumbJsonLd,
+  buildSeoMeta,
+  originFromRequest,
+  stripHtml,
+  truncate,
+} from '~/lib/seo';
 
 export const meta: Route.MetaFunction = ({data}) => {
-  return [{title: `Taylan Wear | ${data?.page.title ?? 'Sayfa'}`}];
+  return buildSeoMeta(data?.seo);
 };
 
 export async function loader(args: Route.LoaderArgs) {
@@ -12,8 +20,30 @@ export async function loader(args: Route.LoaderArgs) {
 
   // Await the critical data required to render initial state of the page
   const criticalData = await loadCriticalData(args);
+  const origin = originFromRequest(args.request);
+  const {page} = criticalData;
+  const path = `/pages/${page.handle}`;
+  const description =
+    page.seo?.description ||
+    truncate(stripHtml(page.body), 160) ||
+    page.title;
 
-  return {...deferredData, ...criticalData};
+  return {
+    ...deferredData,
+    ...criticalData,
+    seo: {
+      origin,
+      path,
+      title: page.seo?.title || page.title,
+      description,
+    },
+    jsonLd: [
+      buildBreadcrumbJsonLd(origin, [
+        {name: 'Ana sayfa', path: '/'},
+        {name: page.title, path},
+      ]),
+    ].filter(Boolean),
+  };
 }
 
 /**
@@ -55,10 +85,11 @@ function loadDeferredData({context}: Route.LoaderArgs) {
 }
 
 export default function Page() {
-  const {page} = useLoaderData<typeof loader>();
+  const {page, jsonLd} = useLoaderData<typeof loader>();
 
   return (
     <article className="content-page">
+      <JsonLd data={jsonLd} />
       <header className="content-page__header">
         <h1 className="content-page__title">{page.title}</h1>
       </header>

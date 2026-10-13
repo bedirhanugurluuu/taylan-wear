@@ -5,8 +5,10 @@ import type {ArticleItemFragment} from 'storefrontapi.generated';
 import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
 
+import {buildSeoMeta, originFromRequest, truncate} from '~/lib/seo';
+
 export const meta: Route.MetaFunction = ({data}) => {
-  return [{title: `Taylan Wear | ${data?.blog.title ?? 'Blog'}`}];
+  return buildSeoMeta(data?.seo);
 };
 
 export async function loader(args: Route.LoaderArgs) {
@@ -15,8 +17,22 @@ export async function loader(args: Route.LoaderArgs) {
 
   // Await the critical data required to render initial state of the page
   const criticalData = await loadCriticalData(args);
+  const origin = originFromRequest(args.request);
+  const blog = criticalData.blog;
+  const path = `/blogs/${blog.handle}`;
 
-  return {...deferredData, ...criticalData};
+  return {
+    ...deferredData,
+    ...criticalData,
+    seo: {
+      origin,
+      path,
+      title: blog.seo?.title || blog.title,
+      description:
+        truncate(blog.seo?.description, 160) ||
+        `${blog.title} — Taylan Wear blog.`,
+    },
+  };
 }
 
 /**
@@ -108,7 +124,7 @@ function ArticleItem({
             />
           </div>
         )}
-        <h3>{article.title}</h3>
+        <h2>{article.title}</h2>
         <small>{publishedAt}</small>
       </Link>
     </div>

@@ -1,3 +1,4 @@
+import {canCustomerReviewProduct} from '~/lib/can-review.server';
 import {createJudgemeReview} from '~/lib/judgeme.server';
 import {
   assertReviewRateLimit,
@@ -6,10 +7,36 @@ import {
 
 type ReviewActionArgs = {
   request: Request;
-  context: {env: Env};
+  context: {
+    env: Env;
+    customerAccount: {
+      isLoggedIn: () => Promise<boolean>;
+      query: (
+        query: string,
+        options?: {variables?: Record<string, unknown>},
+      ) => Promise<{
+        data?: {
+          customer?: {
+            orders?: {
+              nodes?: Array<{
+                lineItems?: {
+                  nodes?: Array<{productId?: string | null}>;
+                };
+              }>;
+            };
+          };
+        } | null;
+        errors?: Array<{message?: string}> | null;
+      }>;
+    };
+  };
 };
 
-const MIN_FORM_MS = 2500;
+const MIN_FORM_MS = 1200;
+
+export async function loader() {
+  return Response.json({ok: false, error: 'Method not allowed'}, {status: 405});
+}
 
 export async function action({request, context}: ReviewActionArgs) {
   if (request.method !== 'POST') {
@@ -22,7 +49,8 @@ export async function action({request, context}: ReviewActionArgs) {
     // Pretend success to bots
     return Response.json({
       ok: true,
-      message: 'Yorumun alındı. Onaylandıktan sonra ürün sayfasında görünecek.',
+      message:
+        'Yorumun gönderildi. Onaylandıktan sonra burada görünecek.',
     });
   }
 
@@ -50,6 +78,21 @@ export async function action({request, context}: ReviewActionArgs) {
     return Response.json(
       {ok: false, error: 'Lütfen tüm alanları doğru doldur.'},
       {status: 400},
+    );
+  }
+
+  const canReview = await canCustomerReviewProduct(
+    context.customerAccount,
+    productId,
+  );
+  if (!canReview) {
+    return Response.json(
+      {
+        ok: false,
+        error:
+          'Yorum yazmak için giriş yapmış olmalı ve bu ürünü satın almış olmalısın.',
+      },
+      {status: 403},
     );
   }
 
@@ -84,6 +127,6 @@ export async function action({request, context}: ReviewActionArgs) {
   return Response.json({
     ok: true,
     message:
-      'Yorumun alındı. Onaylandıktan sonra ürün sayfasında görünecek.',
+      'Yorumun gönderildi. Onaylandıktan sonra burada görünecek.',
   });
 }

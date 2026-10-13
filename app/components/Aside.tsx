@@ -65,9 +65,9 @@ export function Aside({
       />
       <aside className={`aside-panel aside-panel--${type}`}>
         <header className="aside-panel__header">
-          <h3 id={id} className="aside-panel__title">
+          <div id={id} className="aside-panel__title">
             {heading}
-          </h3>
+          </div>
           <button
             type="button"
             className="aside-panel__close"

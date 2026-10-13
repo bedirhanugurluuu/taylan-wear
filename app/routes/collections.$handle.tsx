@@ -8,6 +8,7 @@ import {
   type ProductCardProduct,
 } from '~/components/product/ProductCard';
 import {CollectionBanner} from '~/components/collection/CollectionBanner';
+import {CollectionSeoContent} from '~/components/collection/CollectionSeoContent';
 import {
   CollectionControls,
   CollectionSort,
@@ -18,14 +19,57 @@ import {
   type CollectionFilter,
   withoutBrandFilters,
 } from '~/lib/collection-filters';
+import {JsonLd} from '~/components/seo/JsonLd';
+import {
+  buildBreadcrumbJsonLd,
+  buildCollectionJsonLd,
+  buildSeoMeta,
+  getCollectionSeoCopy,
+  originFromRequest,
+  truncate,
+} from '~/lib/seo';
 
 export const meta: Route.MetaFunction = ({data}) => {
-  return [{title: `Taylan Wear | ${data?.collection.title ?? ''}`}];
+  return buildSeoMeta(data?.seo);
 };
 
 export async function loader(args: Route.LoaderArgs) {
   const criticalData = await loadCriticalData(args);
-  return criticalData;
+  const origin = originFromRequest(args.request);
+  const {collection} = criticalData;
+  const path = `/collections/${collection.handle}`;
+  const seoCopy = getCollectionSeoCopy(collection.handle, collection.title);
+  const description =
+    truncate(collection.description, 160) ||
+    truncate(collection.seo?.description, 160) ||
+    seoCopy.body;
+  const image = collection.image?.url || null;
+
+  return {
+    ...criticalData,
+    seo: {
+      origin,
+      path,
+      title: collection.seo?.title || collection.title,
+      description,
+      image,
+      imageAlt: collection.image?.altText || collection.title,
+    },
+    jsonLd: [
+      buildCollectionJsonLd({
+        origin,
+        title: collection.title,
+        description,
+        path,
+        image,
+      }),
+      buildBreadcrumbJsonLd(origin, [
+        {name: 'Ana sayfa', path: '/'},
+        {name: 'Koleksiyonlar', path: '/collections'},
+        {name: collection.title, path},
+      ]),
+    ].filter(Boolean),
+  };
 }
 
 async function loadCriticalData({context, params, request}: Route.LoaderArgs) {
@@ -68,7 +112,7 @@ async function loadCriticalData({context, params, request}: Route.LoaderArgs) {
 }
 
 export default function Collection() {
-  const {collection} = useLoaderData<typeof loader>();
+  const {collection, jsonLd} = useLoaderData<typeof loader>();
   const filters = withoutBrandFilters(
     (collection.products.filters ?? []) as CollectionFilter[],
   );
@@ -79,6 +123,7 @@ export default function Collection() {
 
   return (
     <div className="collection-page">
+      <JsonLd data={jsonLd} />
       <CollectionBanner />
 
       <div className="collection-page__inner">
@@ -116,6 +161,11 @@ export default function Collection() {
             </PaginatedResourceSection>
           )}
         </div>
+
+        <CollectionSeoContent
+          handle={collection.handle}
+          title={collection.title}
+        />
       </div>
 
       <Analytics.CollectionView
@@ -182,6 +232,16 @@ const COLLECTION_QUERY = `#graphql
       handle
       title
       description
+      seo {
+        title
+        description
+      }
+      image {
+        url
+        altText
+        width
+        height
+      }
       products(
         first: $first
         last: $last

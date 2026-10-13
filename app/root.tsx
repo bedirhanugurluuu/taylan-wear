@@ -24,6 +24,21 @@ import appStyles from '~/styles/app.css?url';
 import tailwindCss from './styles/tailwind.css?url';
 import {PageLayout} from './components/PageLayout';
 import {JudgemeScripts} from '~/components/judgeme/JudgemeScripts';
+import {JsonLd} from '~/components/seo/JsonLd';
+import {
+  buildOrganizationJsonLd,
+  buildWebSiteJsonLd,
+  originFromRequest,
+} from '~/lib/seo';
+import {SITE_SEO} from '~/lib/site-content';
+
+/** Fallback only — route-level meta owns canonical / OG to avoid duplicates. */
+export const meta: Route.MetaFunction = () => {
+  return [
+    {title: SITE_SEO.name},
+    {name: 'description', content: SITE_SEO.defaultDescription},
+  ];
+};
 
 export type RootLoader = typeof loader;
 
@@ -87,10 +102,17 @@ export async function loader(args: Route.LoaderArgs) {
   const judgemePublicToken = env.JUDGEME_PUBLIC_TOKEN || '';
   const judgemeCdnHost = env.JUDGEME_CDN_HOST || 'https://cdn.judge.me';
 
+  const seoOrigin = originFromRequest(args.request);
+
   return {
     ...deferredData,
     ...criticalData,
     publicStoreDomain: env.PUBLIC_STORE_DOMAIN,
+    seoOrigin,
+    jsonLd: [
+      buildOrganizationJsonLd(seoOrigin),
+      buildWebSiteJsonLd(seoOrigin),
+    ].filter(Boolean),
     shop: getShopAnalytics({
       storefront,
       publicStorefrontId: env.PUBLIC_STOREFRONT_ID,
@@ -166,19 +188,20 @@ export function Layout({children}: {children?: ReactNode}) {
 
   return (
     <html lang="tr" suppressHydrationWarning>
-      <head>
+      <head suppressHydrationWarning>
         <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
-        <Links />
         {/*
-          Critical CSS after Meta/Links keeps hydrate order stable.
+          Critical CSS BEFORE Links so app.css media queries can override.
           No nonce — empty client nonce vs SSR nonce was desyncing <head>.
         */}
         <style
+          suppressHydrationWarning
           dangerouslySetInnerHTML={{
             __html: `${resetStylesInline}
               :root{--header-height:64px;--top-bar-height:34px;--font-body:'Inter',system-ui,-apple-system,sans-serif;--color-dark:#000;--color-light:#fff}
+              @media(max-width:767px){:root{--header-height:42px}}
               html,body{margin:0;background:#fff;color:#000;font-family:var(--font-body)}
               main{flex:1;min-width:0}
               .site-header{position:sticky;top:0;z-index:50}
@@ -187,7 +210,7 @@ export function Layout({children}: {children?: ReactNode}) {
               .top-bar__left{display:none}.top-bar__right{text-align:center;grid-column:1/-1}
               .top-bar__link{color:inherit;text-decoration:none}
               .header{position:relative;display:flex;flex-direction:column;background:#fff;color:#000}
-              .header__bar{display:flex;align-items:center;justify-content:space-between;gap:1rem;height:var(--header-height);padding:0 1rem}
+              .header__bar{display:flex;align-items:center;justify-content:space-between;gap:1rem;height:var(--header-height)}
               .header__brand{display:flex;align-items:center;gap:1.25rem;min-width:0}
               .header__logo{color:inherit;text-decoration:none;font-size:1rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;white-space:nowrap}
               .header__actions{display:flex;align-items:center;gap:.35rem;margin-left:auto}
@@ -218,6 +241,7 @@ export function Layout({children}: {children?: ReactNode}) {
             `,
           }}
         />
+        <Links />
       </head>
       <body>
         {children}
@@ -261,6 +285,7 @@ export default function App() {
 
   return (
     <AppShell data={data}>
+      <JsonLd data={data.jsonLd} />
       <JudgemeScripts config={data.judgeme} />
       <Outlet />
     </AppShell>

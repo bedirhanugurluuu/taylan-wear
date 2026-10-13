@@ -6,7 +6,12 @@ import type {
 } from 'storefrontapi.generated';
 import {Aside, useAside} from '~/components/Aside';
 import {Footer} from '~/components/Footer';
-import {buildNavItems, Header, HeaderMenu} from '~/components/Header';
+import {
+  buildNavItems,
+  Header,
+  HeaderMenu,
+  MobileMenuHeading,
+} from '~/components/Header';
 import {TopBar} from '~/components/layout/TopBar';
 import {CartMain} from '~/components/CartMain';
 import {
@@ -52,6 +57,7 @@ export function PageLayout({
         <MobileMenuAside
           header={header}
           publicStoreDomain={publicStoreDomain}
+          isLoggedIn={isLoggedIn}
         />
         <div className="site-header">
           <TopBar />
@@ -245,9 +251,11 @@ function SearchAside({
 function MobileMenuAside({
   header,
   publicStoreDomain,
+  isLoggedIn,
 }: {
   header: PageLayoutProps['header'];
   publicStoreDomain: PageLayoutProps['publicStoreDomain'];
+  isLoggedIn: PageLayoutProps['isLoggedIn'];
 }) {
   const items = header
     ? buildNavItems({
@@ -258,7 +266,10 @@ function MobileMenuAside({
     : undefined;
 
   return (
-    <Aside type="mobile" heading="Menü">
+    <Aside
+      type="mobile"
+      heading={<MobileMenuHeading isLoggedIn={isLoggedIn} />}
+    >
       <HeaderMenu viewport="mobile" items={items} />
     </Aside>
   );

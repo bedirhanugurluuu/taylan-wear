@@ -4,7 +4,6 @@ import {Image, type MappedProductOptions} from '@shopify/hydrogen';
 import type {ProductFragment} from 'storefrontapi.generated';
 import {AddToCartButton} from '~/components/AddToCartButton';
 import {useAside} from '~/components/Aside';
-import type {ProductInfoTabId} from '~/components/product/ProductInfoModal';
 import type {ColorSiblingSwatch} from '~/lib/color-siblings';
 import {PRODUCT_PAGE} from '~/lib/site-content';
 
@@ -16,12 +15,10 @@ export function ProductForm({
   productOptions,
   selectedVariant,
   colorSiblings = [],
-  onOpenInfo,
 }: {
   productOptions: MappedProductOptions[];
   selectedVariant: ProductFragment['selectedOrFirstAvailableVariant'];
   colorSiblings?: ColorSiblingSwatch[];
-  onOpenInfo?: (tab: ProductInfoTabId) => void;
 }) {
   const navigate = useNavigate();
   const {open} = useAside();
@@ -271,16 +268,7 @@ export function ProductForm({
 
       {sizeOption && sizeOption.optionValues.length > 0 ? (
         <div className="product-sizes">
-          <div className="product-sizes__header">
-            <p className="product-sizes__title">Beden</p>
-            <button
-              type="button"
-              className="product-sizes__guide"
-              onClick={() => onOpenInfo?.('measure')}
-            >
-              Nasıl ölçülür?
-            </button>
-          </div>
+          <p className="product-sizes__title">Beden</p>
           <div className="product-sizes__grid">
             {sizeOption.optionValues.map((value) => (
               <button

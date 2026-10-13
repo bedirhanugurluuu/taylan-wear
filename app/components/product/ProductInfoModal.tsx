@@ -5,7 +5,6 @@ import {ProductReviewPanel} from '~/components/judgeme/ProductReviews';
 export type ProductInfoTabId =
   | 'details'
   | 'quality'
-  | 'measure'
   | 'fit'
   | 'returns'
   | 'reviews';
@@ -18,13 +17,15 @@ export type ProductInfoContent = {
 
 export type ProductReviewsContent = {
   productId: string;
+  productHandle: string;
   html?: string | null;
+  reviewCount?: number;
+  canWriteReview?: boolean;
 };
 
 const TABS: Array<{id: ProductInfoTabId; label: string}> = [
   {id: 'details', label: 'Detaylar'},
   {id: 'quality', label: 'Kalite'},
-  {id: 'measure', label: 'Nasıl ölçülür'},
   {id: 'fit', label: 'Kalıp'},
   {id: 'returns', label: 'İade'},
   {id: 'reviews', label: 'Yorumlar'},
@@ -32,8 +33,10 @@ const TABS: Array<{id: ProductInfoTabId; label: string}> = [
 
 export function ProductInfoAccordion({
   onOpen,
+  reviewCount = 0,
 }: {
   onOpen: (tab: ProductInfoTabId) => void;
+  reviewCount?: number;
 }) {
   return (
     <div className="product-info-accordion">
@@ -44,7 +47,12 @@ export function ProductInfoAccordion({
           className="product-info-accordion__row"
           onClick={() => onOpen(tab.id)}
         >
-          <span>{tab.label}</span>
+          <span>
+            {tab.label}
+            {tab.id === 'reviews' && reviewCount > 0
+              ? ` (${reviewCount})`
+              : ''}
+          </span>
           <svg
             xmlns="http://www.w3.org/2000/svg"
             aria-hidden="true"
@@ -105,7 +113,6 @@ export function ProductInfoModal({
 
   if (!open) return null;
 
-  const guide = PRODUCT_PAGE.sizeGuide;
   const returns = PRODUCT_PAGE.returns;
 
   return (
@@ -167,35 +174,6 @@ export function ProductInfoModal({
             <p className="product-info-modal__text">{content.quality}</p>
           ) : null}
 
-          {activeTab === 'measure' ? (
-            <>
-              <p className="product-info-modal__text">{guide.intro}</p>
-              <div className="product-info-modal__table-wrap">
-                <table className="product-info-modal__table">
-                  <thead>
-                    <tr>
-                      <th>Beden</th>
-                      <th>Göğüs</th>
-                      <th>Bel</th>
-                      <th>Kalça</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {guide.rows.map((row) => (
-                      <tr key={row.size}>
-                        <td>{row.size}</td>
-                        <td>{row.chest}</td>
-                        <td>{row.waist}</td>
-                        <td>{row.hip}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <p className="product-info-modal__note">{guide.note}</p>
-            </>
-          ) : null}
-
           {activeTab === 'fit' ? (
             <p className="product-info-modal__text">{content.fit}</p>
           ) : null}
@@ -207,7 +185,10 @@ export function ProductInfoModal({
           {activeTab === 'reviews' && reviews ? (
             <ProductReviewPanel
               productId={reviews.productId}
+              productHandle={reviews.productHandle}
               html={reviews.html}
+              reviewCount={reviews.reviewCount}
+              canWriteReview={reviews.canWriteReview}
             />
           ) : null}
         </div>

@@ -12,8 +12,14 @@ export function shouldRevalidate() {
   return true;
 }
 
+import {buildSeoMeta} from '~/lib/seo';
+
 export const meta: Route.MetaFunction = () => {
-  return [{title: 'Taylan Wear | Hesabım'}];
+  return buildSeoMeta({
+    path: '/account',
+    title: 'Hesabım',
+    noindex: true,
+  });
 };
 
 export async function loader({context}: Route.LoaderArgs) {

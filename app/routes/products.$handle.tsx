@@ -19,32 +19,93 @@ import {
 } from '~/components/product/ProductInfoModal';
 import {RelatedProducts} from '~/components/product/RelatedProducts';
 import {WishlistToggleButton} from '~/components/Wishlist';
+import {JsonLd} from '~/components/seo/JsonLd';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
 import {PRODUCT_PAGE} from '~/lib/site-content';
 import {getColorSiblingSwatches} from '~/lib/color-siblings';
 import {ProductReviewBadge} from '~/components/judgeme/ProductReviews';
+import {canCustomerReviewProduct} from '~/lib/can-review.server';
 import {fetchJudgemeProductWidgets} from '~/lib/judgeme.server';
+import {
+  buildBreadcrumbJsonLd,
+  buildProductJsonLd,
+  buildSeoMeta,
+  originFromRequest,
+  stripHtml,
+  truncate,
+} from '~/lib/seo';
 
 export const meta: Route.MetaFunction = ({data}) => {
-  return [
-    {title: `Taylan Wear | ${data?.product.title ?? ''}`},
-    {
-      rel: 'canonical',
-      href: `/products/${data?.product.handle}`,
-    },
-  ];
+  return buildSeoMeta(data?.seo);
 };
 
 export async function loader(args: Route.LoaderArgs) {
   const criticalData = await loadCriticalData(args);
-  const judgeme = await fetchJudgemeProductWidgets(
-    args.context.env,
-    criticalData.product.handle,
-  );
+  const [judgeme, canWriteReview] = await Promise.all([
+    fetchJudgemeProductWidgets(
+      args.context.env,
+      criticalData.product.handle,
+    ),
+    canCustomerReviewProduct(
+      args.context.customerAccount,
+      criticalData.product.id,
+    ),
+  ]);
+
+  const origin = originFromRequest(args.request);
+  const product = criticalData.product;
+  const variant = product.selectedOrFirstAvailableVariant;
+  const image =
+    variant?.image?.url ||
+    product.images?.nodes?.[0]?.url ||
+    null;
+  const description =
+    product.seo?.description ||
+    truncate(stripHtml(product.descriptionHtml), 160) ||
+    `${product.title} — Taylan Wear`;
+  const path = `/products/${product.handle}`;
+  const collection = product.collections?.nodes?.[0];
+
+  const seo = {
+    origin,
+    path,
+    title: product.seo?.title || product.title,
+    description,
+    image,
+    imageAlt: product.title,
+    type: 'product' as const,
+  };
+
+  const jsonLd = [
+    buildProductJsonLd({
+      origin,
+      name: product.title,
+      description,
+      path,
+      image,
+      sku: variant?.sku,
+      price: variant?.price?.amount,
+      currency: variant?.price?.currencyCode,
+      availability: variant?.availableForSale ? 'InStock' : 'OutOfStock',
+    }),
+    buildBreadcrumbJsonLd(origin, [
+      {name: 'Ana sayfa', path: '/'},
+      collection
+        ? {
+            name: collection.title,
+            path: `/collections/${collection.handle}`,
+          }
+        : {name: 'Katalog', path: '/collections/all'},
+      {name: product.title, path},
+    ]),
+  ].filter(Boolean);
 
   return {
     ...criticalData,
     judgeme,
+    canWriteReview,
+    seo,
+    jsonLd,
     relatedProducts: loadRelatedProducts(args.context, criticalData.product.id),
   };
 }
@@ -107,7 +168,8 @@ function getMetafieldText(
 }
 
 export default function Product() {
-  const {product, relatedProducts, judgeme} = useLoaderData<typeof loader>();
+  const {product, relatedProducts, judgeme, canWriteReview, jsonLd} =
+    useLoaderData<typeof loader>();
   const [infoOpen, setInfoOpen] = useState(false);
   const [infoTab, setInfoTab] = useState<ProductInfoTabId>('details');
 
@@ -153,6 +215,7 @@ export default function Product() {
 
   return (
     <div className="product-page">
+      <JsonLd data={jsonLd} />
       <div className="product-page__layout">
         <div className="product-page__gallery">
           <ProductGallery images={galleryImages} title={title} />
@@ -205,16 +268,18 @@ export default function Product() {
             />
           </div>
 
-          <ProductReviewBadge productId={product.id} html={judgeme?.badgeHtml} />
+          <ProductReviewBadge html={judgeme?.badgeHtml} />
 
           <ProductForm
             productOptions={productOptions}
             selectedVariant={selectedVariant}
             colorSiblings={getColorSiblingSwatches(product)}
-            onOpenInfo={openInfo}
           />
 
-          <ProductInfoAccordion onOpen={openInfo} />
+          <ProductInfoAccordion
+            onOpen={openInfo}
+            reviewCount={judgeme?.reviewCount ?? 0}
+          />
         </div>
       </div>
 
@@ -226,7 +291,10 @@ export default function Product() {
         content={infoContent}
         reviews={{
           productId: product.id,
+          productHandle: product.handle,
           html: judgeme?.widgetHtml,
+          reviewCount: judgeme?.reviewCount ?? 0,
+          canWriteReview: Boolean(canWriteReview),
         }}
         onClose={() => setInfoOpen(false)}
       />
