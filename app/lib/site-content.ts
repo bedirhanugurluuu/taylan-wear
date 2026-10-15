@@ -56,13 +56,13 @@ export const TOP_BAR = {
     href: '/collections/all',
   },
   right: {
-    text: '1500₺ üzeri ücretsiz kargo',
+    text: '2500₺ üzeri ücretsiz kargo',
     href: null as string | null,
   },
 } as const;
 
 export const PRODUCT_PAGE = {
-  freeShippingNote: '1500₺ ve üzeri siparişlerde ücretsiz kargo',
+  freeShippingNote: '2500₺ ve üzeri siparişlerde ücretsiz kargo',
   /** Shared across all products (edit here) */
   returns: {
     title: 'İade & Değişim',

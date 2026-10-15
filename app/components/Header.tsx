@@ -341,17 +341,6 @@ export function HeaderMenu({
 
   return (
     <nav className={className} role="navigation" aria-label="Ana menü">
-      {viewport === 'mobile' && (
-        <NavLink
-          end
-          onClick={close}
-          prefetch="intent"
-          className="header-menu__item"
-          to="/"
-        >
-          Anasayfa
-        </NavLink>
-      )}
       {navItems.map((item) => {
         const hasMega = Boolean(item.links?.length);
 

@@ -163,9 +163,6 @@ export default function ContactPage() {
               </p>
             ) : null}
           </form>
-          <p className="contact-page__back">
-            <Link to="/">Ana sayfaya dön</Link>
-          </p>
         </section>
       </div>
     </div>
