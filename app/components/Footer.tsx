@@ -103,6 +103,13 @@ export function Footer() {
           ))}
         </div>
         <p className="footer__copyright">{FOOTER.bottom.copyright}</p>
+        <img
+          className="footer__payments"
+          src="/iyzico-ile-ode.png"
+          alt="iyzico ile öde: Mastercard, Visa, American Express ve Troy"
+          width={320}
+          height={40}
+        />
       </div>
     </footer>
   );

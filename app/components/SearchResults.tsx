@@ -1,6 +1,6 @@
 import {Link} from 'react-router';
-import {Pagination} from '@shopify/hydrogen';
 import {urlWithTrackingParams, type RegularSearchReturn} from '~/lib/search';
+import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
 import {
   ProductCard,
   type ProductCardProduct,
@@ -105,30 +105,19 @@ function SearchResultsProducts({
   return (
     <section className="search-result">
       <h2 className="search-result__title">Ürünler</h2>
-      <Pagination connection={products}>
-        {({nodes, isLoading, NextLink, PreviousLink}) => (
-          <div>
-            <div className="search-result__pager">
-              <PreviousLink>
-                {isLoading ? 'Yükleniyor…' : 'Önceki'}
-              </PreviousLink>
-            </div>
-            <div className="search-result__grid">
-              {nodes.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  product={product as unknown as ProductCardProduct}
-                />
-              ))}
-            </div>
-            <div className="search-result__pager">
-              <NextLink>
-                {isLoading ? 'Yükleniyor…' : 'Daha fazla'}
-              </NextLink>
-            </div>
-          </div>
+      <PaginatedResourceSection
+        connection={products}
+        resourcesClassName="search-result__grid"
+        ariaLabel="Arama sonuçları"
+      >
+        {({node: product, index}) => (
+          <ProductCard
+            key={product.id}
+            product={product as unknown as ProductCardProduct}
+            loading={index < 4 ? 'eager' : 'lazy'}
+          />
         )}
-      </Pagination>
+      </PaginatedResourceSection>
     </section>
   );
 }

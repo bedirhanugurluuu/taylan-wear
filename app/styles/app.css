@@ -1694,17 +1694,19 @@ button.reset:hover:not(:has(> *)) {
 .footer__bottom {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
+  gap: 0.85rem;
   padding: 1.15rem 0;
   border-top: 1px solid #333;
+  text-align: center;
 }
 
 .footer__legal {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: center;
+  min-width: 0;
   font-size: 0.75rem;
 }
 
@@ -1722,7 +1724,16 @@ button.reset:hover:not(:has(> *)) {
 .footer__copyright {
   margin: 0;
   font-size: 0.75rem;
+  text-align: center;
   color: rgba(255, 255, 255, 0.7);
+}
+
+.footer__payments {
+  display: block;
+  width: auto;
+  height: 28px;
+  max-width: 100%;
+  object-fit: contain;
 }
 
 @media (min-width: 768px) {
@@ -1736,8 +1747,25 @@ button.reset:hover:not(:has(> *)) {
   }
 
   .footer__bottom {
-    flex-direction: row;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     align-items: center;
+    gap: 0.75rem 1rem;
+    text-align: left;
+  }
+
+  .footer__legal {
+    justify-self: start;
+    justify-content: flex-start;
+  }
+
+  .footer__copyright {
+    justify-self: center;
+  }
+
+  .footer__payments {
+    justify-self: end;
+    height: 32px;
   }
 }
 
@@ -2221,8 +2249,7 @@ button.reset:hover:not(:has(> *)) {
 
 .search-page {
   margin: 0 auto;
-  max-width: 1200px;
-  padding: 2.5rem 1rem 4rem;
+  padding: 2rem 1rem 4rem;
 }
 
 .search-page__header {
@@ -2244,7 +2271,6 @@ button.reset:hover:not(:has(> *)) {
   justify-content: center;
   margin: 0 auto;
   max-width: 32rem;
-  max-height: 45px;
 }
 
 .search-page__input {
@@ -2301,19 +2327,22 @@ button.reset:hover:not(:has(> *)) {
 
 .search-result__grid {
   display: grid;
-  gap: 1.25rem 1rem;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 32px;
+  width: 100%;
+}
+
+.search-result__grid > .product-card {
+  min-width: 0;
 }
 
 @media (min-width: 768px) {
-  .search-result__grid {
-    grid-template-columns: repeat(3, 1fr);
+  .search-page {
+    padding-inline: 1.5rem;
   }
-}
 
-@media (min-width: 1024px) {
   .search-result__grid {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
@@ -2721,6 +2750,106 @@ button.reset:hover:not(:has(> *)) {
 .contact-page__back a {
   color: inherit;
   text-underline-offset: 3px;
+}
+
+/*
+* --------------------------------------------------
+* routes/pages.hakkimizda
+* --------------------------------------------------
+*/
+.about-page {
+  margin: 0 auto;
+  max-width: 44rem;
+  padding: 3rem 1.25rem 5rem;
+}
+
+.about-page__hero {
+  margin-bottom: 2.75rem;
+}
+
+.about-page__eyebrow {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  margin: 0 0 0.75rem;
+  text-transform: uppercase;
+}
+
+.about-page__title {
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 0 0 0.85rem;
+  text-transform: uppercase;
+}
+
+.about-page__intro {
+  color: #555;
+  font-size: 0.975rem;
+  line-height: 1.65;
+  margin: 0;
+}
+
+.about-page__section + .about-page__section {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid #ececec;
+}
+
+.about-page__section-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  margin: 0 0 0.75rem;
+  text-transform: uppercase;
+}
+
+.about-page__section-text {
+  margin: 0;
+  font-size: 0.975rem;
+  line-height: 1.65;
+  color: #222;
+}
+
+.about-page__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.25rem 1.75rem;
+  margin-top: 2.5rem;
+}
+
+.about-page__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #111;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  padding: 0.95rem 1.5rem;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.about-page__cta:hover {
+  background: #333;
+}
+
+.about-page__link {
+  color: inherit;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-underline-offset: 3px;
+}
+
+@media (min-width: 768px) {
+  .about-page {
+    padding-inline: 1.5rem;
+  }
 }
 
 .policies-index {

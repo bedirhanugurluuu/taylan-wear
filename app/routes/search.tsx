@@ -7,6 +7,8 @@ import {
   type RegularSearchReturn,
   type PredictiveSearchReturn,
   getEmptyPredictiveSearchResult,
+  searchWords,
+  toProductSearchQuery,
 } from '~/lib/search';
 import type {
   RegularSearchQuery,
@@ -48,6 +50,9 @@ export default function SearchPage() {
   const {type, term, result, error} = useLoaderData<typeof loader>();
   if (type === 'predictive') return null;
 
+  const productCount =
+    result && 'items' in result ? (result.items.products.totalCount ?? 0) : 0;
+
   return (
     <div className="search-page">
       <header className="search-page__header">
@@ -71,8 +76,8 @@ export default function SearchPage() {
         </SearchForm>
         {term ? (
           <p className="search-page__meta">
-            {result?.total
-              ? `“${term}” için ${result.total} sonuç`
+            {productCount
+              ? `“${term}” için ${productCount} ürün`
               : `“${term}” için sonuç yok`}
           </p>
         ) : null}
@@ -203,6 +208,7 @@ export const SEARCH_QUERY = `#graphql
     $language: LanguageCode
     $last: Int
     $term: String!
+    $productTerm: String!
     $startCursor: String
   ) @inContext(country: $country, language: $language) {
     articles: search(
@@ -232,11 +238,12 @@ export const SEARCH_QUERY = `#graphql
       before: $startCursor,
       first: $first,
       last: $last,
-      query: $term,
+      query: $productTerm,
       sortKey: RELEVANCE,
       types: [PRODUCT],
-      unavailableProducts: HIDE,
+      unavailableProducts: LAST,
     ) {
+      totalCount
       nodes {
         ...on Product {
           ...SearchProduct
@@ -262,15 +269,21 @@ async function regularSearch({
 >): Promise<RegularSearchReturn> {
   const {storefront} = context;
   const url = new URL(request.url);
-  const variables = getPaginationVariables(request, {pageBy: 8});
+  const variables = getPaginationVariables(request, {pageBy: 12});
   const term = String(url.searchParams.get('q') || '');
+  const textTerm = searchWords(term).join(' ');
+  const productTerm = toProductSearchQuery(term);
 
   const {
     errors,
     ...items
   }: {errors?: Array<{message: string}>} & RegularSearchQuery =
     await storefront.query(SEARCH_QUERY, {
-      variables: {...variables, term},
+      variables: {
+        ...variables,
+        term: textTerm || term.trim(),
+        productTerm: productTerm || textTerm || term.trim(),
+      },
     });
 
   if (!items) {

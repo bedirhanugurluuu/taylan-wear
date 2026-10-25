@@ -14,8 +14,8 @@ export const SITE_SEO = {
   phone: '+90 536 722 27 93',
   address: 'Akşemsettin, Selimpaşa Sk. 17A, Eyüpsultan/İstanbul',
   sameAs: [
-    'https://instagram.com/',
-    'https://www.shopier.com/',
+    'https://instagram.com/taylanwear/',
+    'https://www.shopier.com/Taylanwear_',
   ] as string[],
   /** Short LLM/SEO copy under category pages (handle → content). */
   collectionCopy: {
@@ -56,13 +56,13 @@ export const TOP_BAR = {
     href: '/collections/all',
   },
   right: {
-    text: '2500₺ üzeri ücretsiz kargo',
+    text: '5000₺ üzeri ücretsiz kargo',
     href: null as string | null,
   },
 } as const;
 
 export const PRODUCT_PAGE = {
-  freeShippingNote: '2500₺ ve üzeri siparişlerde ücretsiz kargo',
+  freeShippingNote: '5000₺ ve üzeri siparişlerde ücretsiz kargo',
   /** Shared across all products (edit here) */
   returns: {
     title: 'İade & Değişim',
@@ -179,8 +179,8 @@ export const HOME_FULL_BANNER = {
 
 /** Same promo banner on every collection / category page */
 export const COLLECTION_BANNER = {
-  title: 'Tişörtlerde 3 al 2 öde',
-  text: 'Seçili tişörtlerde kampanya devam ediyor. Fırsatı kaçırma.',
+  title: 'Sezonun favorileri',
+  text: 'Şehirden hafta sonuna, her güne uyum sağlayan seçili parçalar.',
   ctaLabel: 'Keşfet',
   href: '/collections/all',
   image:
@@ -218,9 +218,38 @@ export const CONTACT_PAGE = {
   social: {
     title: 'Sosyal',
     links: [
-      {label: 'Instagram', href: 'https://instagram.com/'},
-      {label: 'Shopier', href: 'https://www.shopier.com/'},
+      {label: 'Instagram', href: 'https://instagram.com/taylanwear/'},
+      {label: 'Shopier', href: 'https://www.shopier.com/Taylanwear_'},
     ],
+  },
+} as const;
+
+export const ABOUT_PAGE = {
+  title: 'Hakkımızda',
+  eyebrow: 'Taylan Wear',
+  intro:
+    'Taylan Wear, günlük kullanıma uygun sade kesimler tasarlayan bir giyim markası. Koleksiyon; hırka, tişört, sweatshirt, triko ve ceketten oluşur.',
+  sections: [
+    {
+      title: 'Ne yapıyoruz',
+      body: 'Şehir temposunda rahatça giyilen, katmanlanabilir parçalar üretiyoruz. Sezonluk gürültü yerine gardırobun temelini oluşturan modelleri öne alıyoruz: net silüet, sade renk ve tekrar tekrar giyilen kumaş.',
+    },
+    {
+      title: 'Nasıl çalışıyoruz',
+      body: 'Her parça günlük kullanıma göre seçilir. Kalıp rahat olmalı, kumaş gün içinde formunu korumalı, renk kombinlemeyi zorlaştırmamalı. Yeni sezonlar bu çizgiyi bozmadan eklenir.',
+    },
+    {
+      title: 'Nereden',
+      body: `Sipariş, iade ve koleksiyon soruları için ${CONTACT_ADDRESS} adresinden ya da iletişim sayfamızdan bize ulaşabilirsin.`,
+    },
+  ],
+  collectionCta: {
+    label: 'Koleksiyonu incele',
+    href: '/collections/all',
+  },
+  contactCta: {
+    label: 'İletişime geç',
+    href: '/pages/contact',
   },
 } as const;
 
@@ -235,6 +264,7 @@ export const FOOTER = {
   help: {
     title: 'Yardım',
     links: [
+      {label: 'Hakkımızda', href: '/pages/hakkimizda'},
       {label: 'İletişim', href: '/pages/contact'},
       {label: 'İade & Değişim', href: '/policies/refund-policy'},
       {label: 'Kargo', href: '/policies/shipping-policy'},
@@ -252,8 +282,8 @@ export const FOOTER = {
     phone: CONTACT_PHONE,
   },
   social: {
-    instagram: 'https://instagram.com/',
-    shopier: 'https://www.shopier.com/',
+    instagram: 'https://instagram.com/taylanwear/',
+    shopier: 'https://www.shopier.com/Taylanwear_',
   },
   bottom: {
     links: [

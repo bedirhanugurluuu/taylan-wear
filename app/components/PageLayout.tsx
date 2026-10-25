@@ -14,10 +14,7 @@ import {
 } from '~/components/Header';
 import {TopBar} from '~/components/layout/TopBar';
 import {CartMain} from '~/components/CartMain';
-import {
-  SEARCH_ENDPOINT,
-  SearchFormPredictive,
-} from '~/components/SearchFormPredictive';
+import {SearchFormPredictive} from '~/components/SearchFormPredictive';
 import {SearchResultsPredictive} from '~/components/SearchResultsPredictive';
 import {
   filterNewTaggedProducts,
@@ -26,6 +23,7 @@ import {
 import type {ProductCardProduct} from '~/components/product/ProductCard';
 import {WishlistAsideContent} from '~/components/Wishlist';
 import {WishlistProvider} from '~/components/WishlistProvider';
+import {searchHref} from '~/lib/search';
 
 type FeaturedProductsPromise = Promise<{
   products: {nodes: ProductCardProduct[]};
@@ -234,7 +232,7 @@ function SearchAside({
                   <Link
                     className="predictive-search__view-all"
                     onClick={closeSearch}
-                    to={`${SEARCH_ENDPOINT}?q=${term.current}`}
+                    to={searchHref(term.current)}
                   >
                     “{term.current}” için tüm sonuçlar
                   </Link>

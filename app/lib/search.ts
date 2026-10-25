@@ -35,6 +35,37 @@ export function getEmptyPredictiveSearchResult(): PredictiveSearchReturn['result
   };
 }
 
+const SEARCH_BOOLEAN_WORDS = new Set(['and', 'or', 'not']);
+
+/**
+ * Shopify search treats "-", ":", quotes and AND/OR/NOT as operators.
+ * A title like "Basic - Siyah" would otherwise exclude "Siyah".
+ */
+export function searchWords(raw: string): string[] {
+  return raw
+    .replace(/["\\():*[\]{}]/g, ' ')
+    .replace(/-/g, ' ')
+    .split(/\s+/)
+    .map((word) => word.trim())
+    .filter(
+      (word) =>
+        word.length >= 2 && !SEARCH_BOOLEAN_WORDS.has(word.toLowerCase()),
+    );
+}
+
+/** Require every word to appear in the product title. */
+export function toProductSearchQuery(raw: string): string {
+  const words = searchWords(raw);
+  if (!words.length) return '';
+  return words.map((word) => `title:${word}`).join(' AND ');
+}
+
+export function searchHref(term: string) {
+  const value = term.trim();
+  if (!value) return '/search';
+  return `/search?${new URLSearchParams({q: value}).toString()}`;
+}
+
 interface UrlWithTrackingParams {
   /** The base URL to which the tracking parameters will be appended. */
   baseUrl: string;
@@ -68,7 +99,7 @@ export function urlWithTrackingParams({
 }: UrlWithTrackingParams) {
   let search = new URLSearchParams({
     ...extraParams,
-    q: encodeURIComponent(term),
+    q: term,
   }).toString();
 
   if (trackingParams) {

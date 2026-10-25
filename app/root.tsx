@@ -13,7 +13,6 @@ import {
   useRouteLoaderData,
 } from 'react-router';
 import type {Route} from './+types/root';
-import favicon from '~/assets/favicon.svg';
 import {HEADER_QUERY} from '~/lib/fragments';
 import {
   FEATURED_PRODUCTS_QUERY,
@@ -84,7 +83,10 @@ export function links() {
       rel: 'stylesheet',
       href: 'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=optional',
     },
-    {rel: 'icon', type: 'image/svg+xml', href: favicon},
+    {rel: 'icon', href: '/favicon.ico', sizes: 'any'},
+    {rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg'},
+    {rel: 'icon', type: 'image/png', href: '/favicon.png', sizes: '512x512'},
+    {rel: 'apple-touch-icon', href: '/favicon.png'},
   ];
 }
 
