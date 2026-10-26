@@ -253,6 +253,20 @@ export const ABOUT_PAGE = {
   },
 } as const;
 
+/** Shopify sends these policy titles in English. The storefront shows these instead. */
+export const POLICY_TITLES = {
+  'terms-of-service': 'Mesafeli Satış Sözleşmesi',
+  'privacy-policy': 'Gizlilik Sözleşmesi',
+  'refund-policy': 'İade ve Değişim',
+  'shipping-policy': 'Kargo ve Teslimat',
+} as const;
+
+export function policyTitle(handle: string, fallback: string) {
+  return handle in POLICY_TITLES
+    ? POLICY_TITLES[handle as keyof typeof POLICY_TITLES]
+    : fallback;
+}
+
 export const FOOTER = {
   brand: {
     title: 'Taylan Wear',

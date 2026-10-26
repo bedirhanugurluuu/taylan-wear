@@ -7,6 +7,7 @@ type SelectedPolicies = keyof Pick<
   'privacyPolicy' | 'shippingPolicy' | 'termsOfService' | 'refundPolicy'
 >;
 
+import {policyTitle} from '~/lib/site-content';
 import {buildSeoMeta, originFromRequest, stripHtml, truncate} from '~/lib/seo';
 
 export const meta: Route.MetaFunction = ({data}) => {
@@ -42,22 +43,24 @@ export async function loader({params, context, request}: Route.LoaderArgs) {
 
   const origin = originFromRequest(request);
   const path = `/policies/${params.handle}`;
+  const title = policyTitle(policy.handle, policy.title);
 
   return {
     policy,
+    title,
     seo: {
       origin,
       path,
-      title: policy.title,
+      title,
       description:
-        truncate(stripHtml(policy.body), 160) || `${policy.title} — Taylan Wear`,
+        truncate(stripHtml(policy.body), 160) || `${title} — Taylan Wear`,
       noindex: true,
     },
   };
 }
 
 export default function Policy() {
-  const {policy} = useLoaderData<typeof loader>();
+  const {policy, title} = useLoaderData<typeof loader>();
 
   return (
     <article className="content-page">
@@ -65,7 +68,7 @@ export default function Policy() {
         <Link className="content-page__back" to="/policies">
           ← Tüm politikalar
         </Link>
-        <h1 className="content-page__title">{policy.title}</h1>
+        <h1 className="content-page__title">{title}</h1>
       </header>
       <div
         className="content-page__body"

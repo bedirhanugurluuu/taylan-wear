@@ -1,6 +1,7 @@
 import {useLoaderData, Link} from 'react-router';
 import type {Route} from './+types/policies._index';
 import type {PoliciesQuery, PolicyItemFragment} from 'storefrontapi.generated';
+import {policyTitle} from '~/lib/site-content';
 
 export const meta: Route.MetaFunction = () => {
   return [{title: 'Taylan Wear | Politikalar'}];
@@ -34,7 +35,9 @@ export default function Policies() {
       <ul className="policies-index__list">
         {policies.map((policy) => (
           <li key={policy.id}>
-            <Link to={`/policies/${policy.handle}`}>{policy.title}</Link>
+            <Link to={`/policies/${policy.handle}`}>
+              {policyTitle(policy.handle, policy.title)}
+            </Link>
           </li>
         ))}
       </ul>
