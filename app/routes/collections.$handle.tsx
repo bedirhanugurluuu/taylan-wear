@@ -1,6 +1,6 @@
 import {redirect, useLoaderData} from 'react-router';
 import type {Route} from './+types/collections.$handle';
-import {getPaginationVariables, Analytics} from '@shopify/hydrogen';
+import {Analytics} from '@shopify/hydrogen';
 import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
 import {
@@ -80,22 +80,15 @@ async function loadCriticalData({context, params, request}: Route.LoaderArgs) {
     throw redirect('/collections');
   }
 
-  const paginationVariables = getPaginationVariables(request, {
-    pageBy: 12,
-  });
-
   const url = new URL(request.url);
   const filters = getAppliedFilters(url.searchParams);
   const {sortKey, reverse} = getSortFromParam(url.searchParams);
 
-  const {collection} = await storefront.query(COLLECTION_QUERY, {
-    variables: {
-      handle,
-      filters,
-      sortKey,
-      reverse,
-      ...paginationVariables,
-    },
+  const collection = await loadSortedCollection(storefront, {
+    handle,
+    filters,
+    sortKey,
+    reverse,
   });
 
   if (!collection) {
@@ -108,6 +101,67 @@ async function loadCriticalData({context, params, request}: Route.LoaderArgs) {
 
   return {
     collection,
+  };
+}
+
+async function loadSortedCollection(
+  storefront: Route.LoaderArgs['context']['storefront'],
+  variables: {
+    handle: string;
+    filters: ReturnType<typeof getAppliedFilters>;
+    sortKey: ReturnType<typeof getSortFromParam>['sortKey'];
+    reverse: boolean;
+  },
+) {
+  const pageSize = 50;
+  let cursor: string | null = null;
+  let collection: Awaited<
+    ReturnType<typeof storefront.query<typeof COLLECTION_QUERY>>
+  >['collection'] = null;
+  const nodes = [];
+
+  for (let page = 0; page < 8; page++) {
+    const result = await storefront.query(COLLECTION_QUERY, {
+      variables: {
+        ...variables,
+        first: pageSize,
+        endCursor: cursor,
+      },
+    });
+
+    if (!result.collection) {
+      if (!collection) return null;
+      break;
+    }
+
+    collection = result.collection;
+    nodes.push(...result.collection.products.nodes);
+
+    if (!result.collection.products.pageInfo.hasNextPage) break;
+    cursor = result.collection.products.pageInfo.endCursor ?? null;
+  }
+
+  if (!collection) return null;
+
+  const inStock = [];
+  const soldOut = [];
+  for (const node of nodes) {
+    if (node.availableForSale === false) soldOut.push(node);
+    else inStock.push(node);
+  }
+
+  return {
+    ...collection,
+    products: {
+      ...collection.products,
+      nodes: [...inStock, ...soldOut],
+      pageInfo: {
+        hasPreviousPage: false,
+        hasNextPage: false,
+        startCursor: null,
+        endCursor: null,
+      },
+    },
   };
 }
 
@@ -185,6 +239,7 @@ const PRODUCT_CARD_FRAGMENT = `#graphql
     id
     title
     handle
+    availableForSale
     tags
     priceRange {
       minVariantPrice {

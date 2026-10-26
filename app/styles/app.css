@@ -1158,6 +1158,10 @@ button.reset:hover:not(:has(> *)) {
   opacity: 1;
 }
 
+.product-card--sold-out .product-card__img {
+  opacity: 0.72;
+}
+
 .product-card__badge {
   position: absolute;
   top: 8px;
@@ -1171,6 +1175,11 @@ button.reset:hover:not(:has(> *)) {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   line-height: 1;
+}
+
+.product-card__badge--sold-out {
+  background: #111;
+  color: #fff;
 }
 
 .product-card__save {

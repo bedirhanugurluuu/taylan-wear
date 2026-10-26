@@ -114,6 +114,7 @@ const SEARCH_PRODUCT_FRAGMENT = `#graphql
     title
     trackingParameters
     vendor
+    availableForSale
     tags
     priceRange {
       minVariantPrice {

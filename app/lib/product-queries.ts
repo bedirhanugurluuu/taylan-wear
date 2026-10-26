@@ -6,6 +6,7 @@ export const PRODUCT_CARD_FRAGMENT = `#graphql
     id
     title
     handle
+    availableForSale
     tags
     priceRange {
       minVariantPrice {

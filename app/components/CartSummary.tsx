@@ -1,6 +1,7 @@
 import type {CartApiQueryFragment} from 'storefrontapi.generated';
 import type {CartLayout} from '~/components/CartMain';
 import {CartForm, Money, type OptimisticCart} from '@shopify/hydrogen';
+import {checkoutHref} from '~/lib/checkout';
 import {useEffect, useId, useRef, useState} from 'react';
 import {useFetcher} from 'react-router';
 
@@ -73,11 +74,12 @@ export function CartSummary({cart, layout}: CartSummaryProps) {
 }
 
 function CartCheckoutActions({checkoutUrl}: {checkoutUrl?: string}) {
-  if (!checkoutUrl) return null;
+  const href = checkoutHref(checkoutUrl);
+  if (!href) return null;
 
   return (
     <div className="cart-checkout">
-      <a className="cart-checkout__btn" href={checkoutUrl} target="_self">
+      <a className="cart-checkout__btn" href={href} target="_self">
         Alışverişi tamamla
       </a>
     </div>

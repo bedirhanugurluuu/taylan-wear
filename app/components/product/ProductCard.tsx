@@ -18,6 +18,7 @@ export type ProductCardProduct = {
   title: string;
   handle: string;
   tags: string[];
+  availableForSale?: boolean;
   priceRange: {minVariantPrice: MoneyV2};
   images: {nodes: ProductCardImage[]};
   options: Array<{
@@ -41,11 +42,12 @@ export function ProductCard({
   const isNew = product.tags.some((tag) =>
     NEW_TAGS.includes(tag.trim().toLowerCase()),
   );
+  const soldOut = product.availableForSale === false;
 
   return (
     <Link
       to={`/products/${product.handle}`}
-      className="product-card"
+      className={soldOut ? 'product-card product-card--sold-out' : 'product-card'}
       prefetch="intent"
     >
       <div className="product-card__media">
@@ -70,7 +72,13 @@ export function ProductCard({
           />
         ) : null}
 
-        {isNew ? <span className="product-card__badge">Yeni</span> : null}
+        {soldOut ? (
+          <span className="product-card__badge product-card__badge--sold-out">
+            Tükendi
+          </span>
+        ) : isNew ? (
+          <span className="product-card__badge">Yeni</span>
+        ) : null}
 
         <WishlistToggleButton
           className="product-card__save"
