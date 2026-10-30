@@ -31,7 +31,7 @@ export async function loader(args: Route.LoaderArgs) {
       path: '/collections',
       title: 'Koleksiyonlar',
       description:
-        'Taylan Wear koleksiyonlarını keşfet. Hırka, tişört, sweatshirt, triko, ceket ve daha fazlası.',
+        'Taylan Wear koleksiyonlarını keşfet. Hırka, pantolon, sweatshirt, triko, ceket ve daha fazlası.',
     },
     jsonLd: [
       buildBreadcrumbJsonLd(origin, [

@@ -7,7 +7,7 @@ export const SITE_SEO = {
   name: 'Taylan Wear',
   locale: 'tr_TR',
   defaultDescription:
-    'Taylan Wear — sade kesimler, günlük ritmine uyan parçalar. Hırka, tişört, sweatshirt, triko ve ceket koleksiyonlarını keşfet.',
+    'Taylan Wear — sade kesimler, günlük ritmine uyan parçalar. Hırka, pantolon, sweatshirt, triko ve ceket koleksiyonlarını keşfet.',
   defaultOgImage: '/hero.jpg',
   logo: '/favicon.svg',
   email: 'taylanwear@gmail.com',
@@ -23,9 +23,9 @@ export const SITE_SEO = {
       heading: 'Hırka modelleri',
       body: 'Taylan Wear hırka koleksiyonu; katmanlı kombinler ve günlük kullanım için dengeli kalınlıkta parçalar sunar. Sade renkler ve rahat kesimler ile ofisten hafta sonuna kolayca geçiş yapabilirsin.',
     },
-    tisort: {
-      heading: 'Tişört modelleri',
-      body: 'Temel tişörtlerden sezonluk parçalara uzanan Taylan Wear tişört koleksiyonu; nefes alan kumaşlar ve sade kalıplarla gardırobunun omurgasını oluşturur.',
+    pantolon: {
+      heading: 'Pantolon modelleri',
+      body: 'Taylan Wear pantolon koleksiyonu; günlük kullanıma uygun sade kesimler ve rahat kalıplarla gardırobunun temel parçalarını sunar.',
     },
     sweatshirt: {
       heading: 'Sweatshirt modelleri',
@@ -38,10 +38,6 @@ export const SITE_SEO = {
     ceket: {
       heading: 'Ceket modelleri',
       body: 'Ceket ve dış giyim koleksiyonu; net silüetler ve fonksiyonel detaylarla tamamlanır. Katmansız veya katmanlı kombinlerde öne çıkan parçalar sunar.',
-    },
-    aksesuar: {
-      heading: 'Aksesuarlar',
-      body: 'Aksesuar koleksiyonumuz; kıyafetlerini tamamlayan sade ve kullanışlı parçalarla stilini tamamlamana yardımcı olur.',
     },
     all: {
       heading: 'Tüm ürünler',
@@ -89,10 +85,9 @@ export const CATEGORIES = [
       '/hirka.jpg',
   },
   {
-    name: 'Tişört',
-    href: '/collections/tisort',
-    image:
-      '/tisort.jpg',
+    name: 'Pantolon',
+    href: '/collections/pantolon',
+    image: '/pantolon.jpg',
   },
   {
     name: 'Sweatshirt',
@@ -115,15 +110,7 @@ export const CATEGORIES = [
 
 export const HOME_CATEGORIES = {
   title: 'Kategorilerimiz',
-  items: [
-    ...CATEGORIES,
-    {
-      name: 'Aksesuar',
-      href: '/collections/aksesuar',
-      image:
-        'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?auto=format&fit=crop&w=800&q=80',
-    },
-  ],
+  items: [...CATEGORIES],
 } as const;
 
 /**
@@ -228,7 +215,7 @@ export const ABOUT_PAGE = {
   title: 'Hakkımızda',
   eyebrow: 'Taylan Wear',
   intro:
-    'Taylan Wear, günlük kullanıma uygun sade kesimler tasarlayan bir giyim markası. Koleksiyon; hırka, tişört, sweatshirt, triko ve ceketten oluşur.',
+    'Taylan Wear, günlük kullanıma uygun sade kesimler tasarlayan bir giyim markası. Koleksiyon; hırka, pantolon, sweatshirt, triko ve ceketten oluşur.',
   sections: [
     {
       title: 'Ne yapıyoruz',

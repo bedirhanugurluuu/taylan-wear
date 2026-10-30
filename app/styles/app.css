@@ -1158,7 +1158,7 @@ button.reset:hover:not(:has(> *)) {
   opacity: 1;
 }
 
-.product-card--sold-out .product-card__img {
+.product-card--sold-out .product-card__img--primary {
   opacity: 0.72;
 }
 
