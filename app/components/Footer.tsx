@@ -1,12 +1,7 @@
-import {type FormEvent} from 'react';
 import {Link} from 'react-router';
 import {FOOTER} from '~/lib/site-content';
 
 export function Footer() {
-  const onNewsletterSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-  };
-
   return (
     <footer className="footer">
       <div className="footer__top">
@@ -35,12 +30,13 @@ export function Footer() {
         </div>
 
         <div className="footer__newsletter">
+          {/* Newsletter — şimdilik kapalı
           <h3 className="footer__heading footer__heading--light">
             {FOOTER.newsletter.title}
           </h3>
           <p className="footer__newsletter-text">{FOOTER.newsletter.text}</p>
 
-          <form className="footer__form" onSubmit={onNewsletterSubmit}>
+          <form className="footer__form">
             <label className="sr-only" htmlFor="footer-email">
               E-posta
             </label>
@@ -57,6 +53,7 @@ export function Footer() {
               Gönder
             </button>
           </form>
+          */}
 
           <p className="footer__contact footer__contact--muted">
             {FOOTER.contact.address}

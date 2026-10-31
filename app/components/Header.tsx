@@ -69,6 +69,10 @@ function imageForHref(href: string, fallback?: string | null) {
   return match?.image ?? fallback ?? null;
 }
 
+function isHomeHref(href: string) {
+  return href === '/' || href === '';
+}
+
 export function buildNavItems({
   menu,
   publicStoreDomain,
@@ -82,9 +86,6 @@ export function buildNavItems({
     const items: NavItem[] = [];
 
     for (const item of menu.items) {
-      if (!item.url) continue;
-
-      const href = toPathname(item.url, publicStoreDomain, primaryDomainUrl);
       const childLinks: NavLinkItem[] | null =
         item.items?.length > 0
           ? item.items
@@ -102,7 +103,17 @@ export function buildNavItems({
                   image: imageForHref(childHref),
                 };
               })
+              .filter((child) => !isHomeHref(child.href))
           : null;
+
+      // Parent may be a heading without URL; keep it if it has children.
+      if (!item.url && !childLinks?.length) continue;
+
+      const href = item.url
+        ? toPathname(item.url, publicStoreDomain, primaryDomainUrl)
+        : childLinks?.[0]?.href || '#';
+
+      if (isHomeHref(href) && !childLinks?.length) continue;
 
       items.push({
         id: item.id,
@@ -310,6 +321,32 @@ export function MobileMenuHeading({
   );
 }
 
+function ChevronIcon({direction = 'right'}: {direction?: 'left' | 'right'}) {
+  return (
+    <svg
+      className={`header-menu__chevron header-menu__chevron--${direction}`}
+      width="30"
+      height="30"
+      viewBox="0 0 30 30"
+      fill="none"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path
+        d={
+          direction === 'left'
+            ? 'M18.5 7.5L11 15l7.5 7.5'
+            : 'M11.5 7.5L19 15l-7.5 7.5'
+        }
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function HeaderMenu({
   items,
   viewport,
@@ -323,6 +360,7 @@ export function HeaderMenu({
 }) {
   const className = `header-menu header-menu--${viewport}`;
   const {close} = useAside();
+  const [activePanelId, setActivePanelId] = useState<string | null>(null);
   const navItems =
     items ??
     HEADER_NAV.map((item) => ({
@@ -339,12 +377,89 @@ export function HeaderMenu({
         : null,
     }));
 
+  if (viewport === 'mobile') {
+    const activePanel = navItems.find(
+      (item) => item.id === activePanelId && item.links?.length,
+    );
+
+    return (
+      <nav className={className} role="navigation" aria-label="Ana menü">
+        {activePanel && activePanel.links ? (
+          <div className="header-menu__panel">
+            <button
+              type="button"
+              className="header-menu__back"
+              onClick={() => setActivePanelId(null)}
+            >
+              <ChevronIcon direction="left" />
+              <span>{activePanel.title}</span>
+            </button>
+            <div className="header-menu__panel-links">
+              {activePanel.links.map((link) => (
+                <NavLink
+                  key={link.href}
+                  className="header-menu__item header-menu__item--child"
+                  onClick={close}
+                  prefetch="intent"
+                  to={link.href}
+                >
+                  {link.label}
+                </NavLink>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="header-menu__panel">
+            {navItems.map((item) => {
+              const hasChildren = Boolean(item.links?.length);
+
+              if (!hasChildren) {
+                return (
+                  <NavLink
+                    key={item.id}
+                    className="header-menu__row"
+                    onClick={close}
+                    prefetch="intent"
+                    to={item.href}
+                  >
+                    <span className="header-menu__item">{item.title}</span>
+                  </NavLink>
+                );
+              }
+
+              return (
+                <div key={item.id} className="header-menu__row">
+                  <NavLink
+                    className="header-menu__item header-menu__item--parent"
+                    onClick={close}
+                    prefetch="intent"
+                    to={item.href}
+                  >
+                    {item.title}
+                  </NavLink>
+                  <button
+                    type="button"
+                    className="header-menu__drill"
+                    aria-label={`${item.title} alt menüsünü aç`}
+                    onClick={() => setActivePanelId(item.id)}
+                  >
+                    <ChevronIcon direction="right" />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </nav>
+    );
+  }
+
   return (
     <nav className={className} role="navigation" aria-label="Ana menü">
       {navItems.map((item) => {
         const hasMega = Boolean(item.links?.length);
 
-        if (viewport === 'desktop' && hasMega) {
+        if (hasMega) {
           return (
             <div
               key={item.id}
@@ -360,34 +475,6 @@ export function HeaderMenu({
               >
                 {item.title}
               </NavLink>
-            </div>
-          );
-        }
-
-        if (viewport === 'mobile' && item.links?.length) {
-          return (
-            <div key={item.id} className="header-menu__group">
-              <NavLink
-                className="header-menu__item header-menu__item--parent"
-                onClick={close}
-                prefetch="intent"
-                to={item.href}
-              >
-                {item.title}
-              </NavLink>
-              <div className="header-menu__children">
-                {item.links.map((link) => (
-                  <NavLink
-                    key={link.href}
-                    className="header-menu__item header-menu__item--child"
-                    onClick={close}
-                    prefetch="intent"
-                    to={link.href}
-                  >
-                    {link.label}
-                  </NavLink>
-                ))}
-              </div>
             </div>
           );
         }

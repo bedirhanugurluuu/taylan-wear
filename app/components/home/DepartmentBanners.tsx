@@ -23,7 +23,9 @@ export function DepartmentBanners() {
               <h2 className="department-banner__title">{item.title}</h2>
               <p className="department-banner__text">{item.text}</p>
               <Link to={item.href} className="department-banner__cta">
-                <span className="department-banner__cta-label">İncele</span>
+                <span className="department-banner__cta-label">
+                  {item.ctaLabel}
+                </span>
                 <span className="department-banner__cta-line" aria-hidden="true" />
               </Link>
             </div>

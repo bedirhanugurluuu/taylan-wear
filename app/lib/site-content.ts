@@ -119,13 +119,31 @@ export const HOME_CATEGORIES = {
  */
 export const HEADER_NAV = [
   {
-    title: 'Koleksiyon',
-    href: '/collections/all',
+    title: 'Üst Giyim',
+    href: '/collections/ust-giyim',
     image: '/menu.jpg',
-    links: CATEGORIES.map((item) => ({
-      label: item.name,
-      href: item.href,
-    })),
+    links: [
+      {label: 'Sweatshirt', href: '/collections/sweatshirt'},
+      {label: 'Hırka', href: '/collections/hirka'},
+      {label: 'Kazak', href: '/collections/kazak'},
+      {label: 'Triko', href: '/collections/triko'},
+    ],
+  },
+  {
+    title: 'Dış Giyim',
+    href: '/collections/dis-giyim',
+    image: '/menu.jpg',
+    links: [{label: 'Ceket', href: '/collections/ceket'}],
+  },
+  {
+    title: 'Alt Giyim',
+    href: '/collections/alt-giyim',
+    image: '/menu.jpg',
+    links: [
+      {label: 'Kot Pantolon', href: '/collections/kot-pantolon'},
+      {label: 'Eşofman', href: '/collections/esofman'},
+      {label: 'Jogger', href: '/collections/jogger'},
+    ],
   },
   {
     title: 'İletişim',
@@ -137,20 +155,20 @@ export const HEADER_NAV = [
 
 export const HOME_DEPARTMENTS = [
   {
-    title: 'Klasik',
-    text: 'Zamansız kesimler ve günlük gardırobun temel parçaları.',
-    href: '/collections/klasik',
-    image:
-      '/hero-2.jpg',
-    alt: 'Klasik koleksiyon',
+    title: 'Sweatshirt',
+    text: 'Rahat kalıp ve günlük kullanıma uygun parçalar.',
+    href: '/collections/sweatshirt',
+    ctaLabel: 'Sweatshirtlerimizi keşfet',
+    image: '/hero-2.jpg',
+    alt: 'Sweatshirt koleksiyonu',
   },
   {
-    title: 'Rahat Giyim',
-    text: 'Hareket özgürlüğü sunan, şehir temposuna uygun parçalar.',
-    href: '/collections/spor-giyim',
-    image:
-      '/hero-3.jpg',
-    alt: 'Spor giyim koleksiyonu',
+    title: 'Hırka',
+    text: 'Katmanlı kombinler ve rahat kesimler için seçili parçalar.',
+    href: '/collections/hirka',
+    ctaLabel: 'Hırkalarımızı keşfet',
+    image: '/hero-3.jpg',
+    alt: 'Hırka koleksiyonu',
   },
 ] as const;
 
