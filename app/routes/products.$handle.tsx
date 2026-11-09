@@ -23,6 +23,10 @@ import {JsonLd} from '~/components/seo/JsonLd';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
 import {PRODUCT_PAGE} from '~/lib/site-content';
 import {getColorSiblingSwatches} from '~/lib/color-siblings';
+import {
+  complementaryCollectionHandle,
+  primaryCollection,
+} from '~/lib/outfit-pairing';
 import {ProductReviewBadge} from '~/components/judgeme/ProductReviews';
 import {canCustomerReviewProduct} from '~/lib/can-review.server';
 import {fetchJudgemeProductWidgets} from '~/lib/judgeme.server';
@@ -64,7 +68,7 @@ export async function loader(args: Route.LoaderArgs) {
     truncate(stripHtml(product.descriptionHtml), 160) ||
     `${product.title} — Taylan Wear`;
   const path = `/products/${product.handle}`;
-  const collection = product.collections?.nodes?.[0];
+  const collection = primaryCollection(product.collections?.nodes ?? []);
 
   const seo = {
     origin,
@@ -106,7 +110,7 @@ export async function loader(args: Route.LoaderArgs) {
     canWriteReview,
     seo,
     jsonLd,
-    relatedProducts: loadRelatedProducts(args.context, criticalData.product.id),
+    relatedProducts: loadRelatedProducts(args.context, criticalData.product),
   };
 }
 
@@ -135,28 +139,67 @@ async function loadCriticalData({context, params, request}: Route.LoaderArgs) {
   };
 }
 
-function loadRelatedProducts(
-  context: Route.LoaderArgs['context'],
+function sortRelatedProducts<T extends {id: string; availableForSale?: boolean}>(
+  products: T[],
   productId: string,
 ) {
-  return context.storefront
-    .query(RELATED_PRODUCTS_QUERY, {
-      variables: {productId},
-    })
-    .then(async (response) => {
-      if (response?.productRecommendations?.length) return response;
+  return products
+    .filter((item) => item.id !== productId)
+    .sort((a, b) => Number(b.availableForSale !== false) - Number(a.availableForSale !== false))
+    .slice(0, 10);
+}
+
+function loadRelatedProducts(
+  context: Route.LoaderArgs['context'],
+  product: {
+    id: string;
+    collections?: {nodes?: Array<{handle: string}> | null} | null;
+  },
+) {
+  const complementaryHandle = complementaryCollectionHandle(
+    (product.collections?.nodes ?? []).map((item) => item.handle),
+  );
+
+  return (async () => {
+    try {
+      if (complementaryHandle) {
+        const paired = await context.storefront.query(
+          COMPLEMENTARY_PRODUCTS_QUERY,
+          {variables: {handle: complementaryHandle}},
+        );
+        const nodes = sortRelatedProducts(
+          paired.collection?.products?.nodes ?? [],
+          product.id,
+        );
+        if (nodes.length) {
+          return {productRecommendations: nodes};
+        }
+      }
+
+      const response = await context.storefront.query(RELATED_PRODUCTS_QUERY, {
+        variables: {productId: product.id},
+      });
+      if (response?.productRecommendations?.length) {
+        return {
+          productRecommendations: sortRelatedProducts(
+            response.productRecommendations,
+            product.id,
+          ),
+        };
+      }
 
       const fallback = await context.storefront.query(RELATED_FALLBACK_QUERY);
       return {
-        productRecommendations: (fallback.products?.nodes ?? []).filter(
-          (item: {id: string}) => item.id !== productId,
+        productRecommendations: sortRelatedProducts(
+          fallback.products?.nodes ?? [],
+          product.id,
         ),
       };
-    })
-    .catch((error: Error) => {
+    } catch (error) {
       console.error(error);
       return null;
-    });
+    }
+  })();
 }
 
 function getMetafieldText(
@@ -187,10 +230,15 @@ export default function Product() {
 
   const {title} = product;
   const images = product.images?.nodes ?? [];
-  const collection = product.collections?.nodes?.[0];
-  const viewAllHref = collection
-    ? `/collections/${collection.handle}`
-    : '/collections/all';
+  const collection = primaryCollection(product.collections?.nodes ?? []);
+  const complementaryHandle = complementaryCollectionHandle(
+    (product.collections?.nodes ?? []).map((item) => item.handle),
+  );
+  const viewAllHref = complementaryHandle
+    ? `/collections/${complementaryHandle}`
+    : collection
+      ? `/collections/${collection.handle}`
+      : '/collections/all';
 
   const galleryImages =
     images.length > 0
@@ -376,7 +424,7 @@ const PRODUCT_FRAGMENT = `#graphql
         height
       }
     }
-    collections(first: 1) {
+    collections(first: 12) {
       nodes {
         handle
         title
@@ -508,6 +556,23 @@ const RELATED_PRODUCT_CARD_FRAGMENT = `#graphql
         name
         swatch {
           color
+        }
+      }
+    }
+  }
+` as const;
+
+const COMPLEMENTARY_PRODUCTS_QUERY = `#graphql
+  ${RELATED_PRODUCT_CARD_FRAGMENT}
+  query ComplementaryProducts(
+    $handle: String!
+    $country: CountryCode
+    $language: LanguageCode
+  ) @inContext(country: $country, language: $language) {
+    collection(handle: $handle) {
+      products(first: 12, sortKey: BEST_SELLING) {
+        nodes {
+          ...RelatedProductCard
         }
       }
     }

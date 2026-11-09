@@ -165,7 +165,7 @@ export function ProductRail({
             }
             // Close after Link handles navigation in this same click.
             if (onProductClick) {
-              queuePromise.resolve().then(onProductClick);
+              queueMicrotask(onProductClick);
             }
           }}
         >
