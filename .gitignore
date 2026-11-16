@@ -8,3 +8,6 @@ node_modules
 .shopify
 .react-router
 served.css
+shopier-stock.csv
+shopier-stock-sheets.csv
+shopier-shopify-match.csv

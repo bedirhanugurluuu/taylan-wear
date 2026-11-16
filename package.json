@@ -10,7 +10,12 @@
     "preview": "shopify hydrogen preview --build",
     "lint": "eslint --no-error-on-unmatched-pattern .",
     "typecheck": "react-router typegen && tsc --noEmit",
-    "codegen": "shopify hydrogen codegen && react-router typegen"
+    "codegen": "shopify hydrogen codegen && react-router typegen",
+    "shopier:stock": "node scripts/shopier-stock.mjs",
+    "shopier:stock:csv": "node scripts/shopier-stock.mjs --csv",
+    "shopier:match": "node scripts/shopier-shopify-match.mjs",
+    "shopier:sync": "node scripts/shopier-shopify-sync.mjs",
+    "shopier:sync:apply": "node scripts/shopier-shopify-sync.mjs --apply"
   },
   "prettier": "@shopify/prettier-config",
   "dependencies": {
